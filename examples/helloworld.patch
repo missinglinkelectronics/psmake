@@ -1,0 +1,11 @@
+--- a/helloworld.c	2019-09-02 09:37:40.090844615 +0200
++++ b/helloworld.c~	2019-09-02 09:42:55.485332434 +0200
+@@ -54,7 +54,7 @@
+ {
+     init_platform();
+ 
+-    print("Hello World\n\r");
++    print("Hello World XSDK Build System\n\r");
+ 
+     cleanup_platform();
+     return 0;
