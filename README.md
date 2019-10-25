@@ -152,6 +152,44 @@ HDF is deleted as well (i.e. all files in folder `project-spec/hw-description`
 except file `metadata`).
 
 
+## Networkless Builds
+
+In some circumstances, it might be desirable to perform builds without any
+network access; notably,
+- to provide long-term reproducibility in case of package sources being
+  not available online anymore.
+- to perform builds in corporate environments with restricted internet access.
+
+
+### Setup
+
+A number of PetaLinux configuration options have to be changed to enable
+networkless builds; run `make config` and,
+
+- in Yocto Settings -> Add pre-mirror url, set the `pre-mirror url path` to
+  your local source mirror, e.g `file://${PROOT}/source-mirror` (or set
+  `CONFIG_PRE_MIRROR_URL` in `project-spec/configs/config`).
+- in Yocto Settings, uncheck `Enable Network sstate feeds`
+  (or unset `CONFIG_YOCTO_NETWORK_SSTATE_FEEDS` in
+  `project-spec/configs/config`).
+- in Yocto Settings, check `Enable BB NO NETWORK`
+  (or set `CONFIG_YOCTO_BB_NO_NETWORK` in `project-spec/configs/config`).
+
+
+### Usage
+
+All sources that are not part of the PetaLinux installation will be stored in
+the local source mirror. To update the source mirror, run:
+
+    $ make UPDATE_MIRROR=1
+
+The local source mirror must be updated each and every time a package is added
+to the image. Notably, sources are only added to the source mirror, but never
+removed; so multiple revisions or entirely different PetaLinux projects can
+share a mirror. Cleanup of the source mirror should be performed manually when
+required.
+
+
 ### Extending
 
 If you need additional functionality in your project, put it into a file named

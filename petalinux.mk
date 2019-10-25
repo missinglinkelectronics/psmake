@@ -58,6 +58,10 @@ PLATFORM = $(shell cat project-spec/configs/config | \
 DEF_IMAGEUB = images/linux/image.ub
 SYSTEM_DTB ?= images/linux/system.dtb
 SYSTEM_DTS ?= images/linux/system.dts
+PETALINUX_CONFIG = project-spec/configs/config
+LOCAL_CONF = build/conf/local.conf
+SOURCE_DOWNLOADS = build/downloads
+SOURCE_MIRROR = $(shell awk 'BEGIN { FS = "file://" } /PREMIRRORS =/ { gsub(/ \\n \\/, "", $$2); print $$2 }' build/conf/plnxtool.conf)
 
 PRJ_HDF = project-spec/hw-description/system.hdf
 
@@ -79,6 +83,7 @@ UBOOT ?=
 BOOT ?=
 BSP ?=
 BOOT_ARG_EXTRA ?=
+UPDATE_MIRROR ?= 0
 
 # petalinux-* generic arguments
 ifeq ($(V),1)
@@ -116,6 +121,31 @@ endif
 ###############################################################################
 
 
+define set-update-mirror
+	sed -i 's/CONFIG_YOCTO_BB_NO_NETWORK=y/# CONFIG_YOCTO_BB_NO_NETWORK is not set/' $(PETALINUX_CONFIG)
+	printf 'BB_GENERATE_MIRROR_TARBALLS = "1"' >> $(LOCAL_CONF)
+	petalinux-config --oldconfig
+endef
+
+define reset-update-mirror
+	sed -i 's/# CONFIG_YOCTO_BB_NO_NETWORK is not set/CONFIG_YOCTO_BB_NO_NETWORK=y/' $(PETALINUX_CONFIG)
+	sed -i '/BB_GENERATE_MIRROR_TARBALLS/d' $(LOCAL_CONF)
+	petalinux-config --oldconfig
+endef
+
+# arg1: cmd
+define trap-update-mirror
+sh -c "trap 'trap - SIGINT SIGTERM ERR; \
+	sed -i \"s/# CONFIG_YOCTO_BB_NO_NETWORK is not set/CONFIG_YOCTO_BB_NO_NETWORK=y/\" $(PETALINUX_CONFIG); \
+	sed -i \"/BB_GENERATE_MIRROR_TARBALLS/d\" $(LOCAL_CONF); \
+	petalinux-config --oldconfig; \
+	exit 1' SIGINT SIGTERM ERR; $(1)"
+endef
+
+
+###############################################################################
+
+
 FORCE:
 
 
@@ -143,10 +173,25 @@ config-rootfs: $(PRJ_HDF)
 	petalinux-config $(GEN_ARGS) -c rootfs
 
 build: $(PRJ_HDF)
-	petalinux-build $(GEN_ARGS)
+	$(call trap-update-mirror,__BLD_ARGS=\"$(GEN_ARGS)\" $(MAKE) __build)
 
 sdk: $(PRJ_HDF)
-	petalinux-build $(GEN_ARGS) -s
+	$(call trap-update-mirror,__BLD_ARGS=\"$(GEN_ARGS) -s\" $(MAKE) __build)
+
+__build:
+ifeq ($(UPDATE_MIRROR),1)
+	$(call set-update-mirror)
+endif
+	petalinux-build $(__BLD_ARGS)
+ifeq ($(UPDATE_MIRROR),1)
+	mkdir -p $(SOURCE_MIRROR)
+	find $(SOURCE_DOWNLOADS)/* -path '$(SOURCE_DOWNLOADS)/git2' -prune -or \
+		-not -name '*.done' \
+		-type f \
+		-print \
+		-exec cp -n {} $(SOURCE_MIRROR) \;
+	$(call reset-update-mirror)
+endif
 
 .PHONY: config config-kernel config-rootfs build sdk
 
