@@ -27,46 +27,23 @@
 ##
 ##  File Summary   : xsct/xsdk convenience wrapper
 ##
-##                   Uses: cat git patch rm xsct xsdk
+##                   Uses: xsct xsdk
 ##
 ################################################################################
 
+MAKEFILE_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 all: build
-
 
 # include config
 CFG ?= default
 include $(CFG).mk
 
+include $(MAKEFILE_PATH)common.mk
 
 ###############################################################################
+# Variables
 
-
-# user arguments
-VCS_SKIP ?=
-
-# get version control information
-ifeq ($(VCS_SKIP),)
-VCS_HEAD := $(shell git rev-parse --verify --short HEAD 2>/dev/null)
-endif
-ifneq ($(VCS_HEAD),)
-VCS_DIRTY := $(shell git diff-index --name-only HEAD | head -n 1)
-VCS_VER := _g$(VCS_HEAD)$(patsubst %,-dirty,$(VCS_DIRTY))
-else
-VCS_VER :=
-endif
-
-# get build time stamp
-BSTAMP := $(shell date +%Y%m%d-%H%M%S)
-
-# user arguments, usually provided on command line
-#  container for build directories (= xsdk workspaces)
-CNTR ?= build
-#  build directory name
-BLDN ?= $(CFG)_$(BSTAMP)$(VCS_VER)
-#  relative path to build directory
-O ?= $(CNTR)/$(BLDN)
 #  path to .hdf file exported from Vivado
 HDF ?=
 
@@ -83,28 +60,12 @@ APP_PRJS ?=
 HW_PRJ ?= hw
 XSCT ?= xsct
 XSDK ?= xsdk
-BOOTGEN ?= bootgen
 
 # internal settings
 # <none>
 
-
 ###############################################################################
-
-REPOS ?=
-
-ifneq ($(strip $(REPOS)),)
-__REPOS_CCMD = $(foreach REPO,$(REPOS), \
-	repo -set {$(REPO)};)
-endif
-
-$(O)/.metadata/repos.stamp:
-ifneq ($(strip $(REPOS)),)
-	$(XSCT) -eval 'setws {$(O)}; $(__REPOS_CCMD)'
-else
-	mkdir -p $(O)/.metadata/
-endif
-	touch $@
+# Hardware Platform Project
 
 # arg1: hw name
 # arg2: path to hdf file
@@ -128,19 +89,8 @@ $(1)_distclean:
 .PHONY: $(1)_distclean
 endef
 
-# arg1: prj name
-# arg2: patch file name, scheme <patchfile>[;<stripnum>]
-define patch-src
-patch -d $(O)/$(1)/ -p$$(subst ,1,$$(word 2,$$(subst ;, ,$(2)))) \
-	<$$(word 1,$$(subst ;, ,$(2))) &&
-endef
-
-# arg1: prj name
-# arg2: src file name to edit and sed command file, scheme <srcfile>;<sedfile>
-define sed-src
-sed -i -f $$(lastword $$(subst ;, ,$(2))) \
-	$(O)/$(1)/$$(firstword $$(subst ;, ,$(2))) &&
-endef
+###############################################################################
+# Board Support Packages (BSPs)
 
 # arg1: bsp name
 # arg2: hw name
@@ -218,16 +168,12 @@ $(1)_distclean:
 .PHONY: $(1)_distclean
 endef
 
+###############################################################################
+# Applications
+
 # arg1: app name
 define gen-app-proc-contents-rule
 $$($(1)_PROC)
-endef
-
-# arg1: app name
-# arg2: src file name, scheme <srcfile>
-define symlink-src
-rm -f $(O)/$(1)/src/$$(notdir $(2)) && \
-ln -s ../../../../$(2) $(O)/$(1)/src/$$(notdir $(2)) &&
 endef
 
 # arg1: app name
@@ -285,66 +231,8 @@ $(1)_distclean:
 .PHONY: $(1)_distclean
 endef
 
-# arg1: BIF file name
-# arg2: BIF attribute
-define gen-bif-attr
-\t[$$($(1)_$(2)_BIF_ATTR)] $$($(1)_$(2)_BIF_FILE)\n
-endef
-
-define gen-bif-rule
-$(1)_FLASH_TYPE ?=
-$(1)_FLASH_FSBL ?=
-$(1)_FLASH_OFF ?= 0
-
-$(O)/$(1)/$(1).bif: $(BLD_APPS_DEP)
-	mkdir -p $(O)/$(1)
-	printf '$(1):\n{\n' > $(O)/$(1)/$(1).bif
-ifneq ($$(strip $$($(1)_BIF_ATTRS)),)
-	printf '$$(foreach BIF_ATTR,$$($(1)_BIF_ATTRS), \
-		$(call gen-bif-attr,$(1),$$(BIF_ATTR)))' \
-		>> $(O)/$(1)/$(1).bif
-endif
-	printf '}\n' >> $(O)/$(1)/$(1).bif
-
-$(O)/$(1)/BOOT.BIN: $(O)/$(1)/$(1).bif
-ifeq ($$($(1)_BIF_NO_OUTPUT),yes)
-	cd $(O) && $(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
-		$$($(1)_BIF_ARGS_EXTRA)
-else
-	cd $(O) && $(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
-		-o $(1)/BOOT.BIN -w $$($(1)_BIF_ARGS_EXTRA)
-endif
-
-GEN_BOOTGEN_DEP += $(O)/$(1)/$(1).bif
-BLD_BOOTGEN_DEP += $(O)/$(1)/BOOT.BIN
-
-# NOTE: Target $(1)_flash is written for QSPI flashing in mind - other types
-#       might need more or other arguments!
-$(1)_flash: $(O)/$(1)/BOOT.BIN
-	cd $(O) && \
-	program_flash \
-		-flash_type $$($(1)_FLASH_TYPE) \
-		-fsbl $$($(1)_FLASH_FSBL) \
-		-f $(1)/BOOT.BIN -offset $$($(1)_FLASH_OFF) \
-		-verify \
-		-cable type xilinx_tcf url $(HW_SERVER_URL)
-.PHONY: $(1)_flash
-
-# shortcut to build bootgen project, "make <bootgen>"
-$(1): $(O)/$(1)/BOOT.BIN
-.PHONY: $(1)
-
-$(1)_clean:
-	find $(O)/$(1)/* -not -name $(1).bif -delete
-.PHONY: $(1)_clean
-
-$(1)_distclean:
-	rm -fr $(O)/$(1)
-.PHONY: $(1)_distclean
-endef
-
 ###############################################################################
-
+# Targets
 
 # generate make rules for hardware project, single
 $(eval $(call gen-hw-rule,$(HW_PRJ),$(HDF)))
@@ -359,10 +247,6 @@ $(foreach BSP_PRJ,$(BSP_PRJS),\
 $(foreach APP_PRJ,$(APP_PRJS),\
 	$(eval $(call gen-app-rule,$(APP_PRJ),$(HW_PRJ))))
 
-# generate make rules for bootgen projects, multiple
-$(foreach BOOTGEN_PRJ,$(BOOTGEN_PRJS),\
-	$(eval $(call gen-bif-rule,$(BOOTGEN_PRJ))))
-
 # generate all (app) projects
 generate: $(GEN_APPS_DEP) $(GEN_BOOTGEN_DEP)
 .PHONY: generate
@@ -376,20 +260,8 @@ xsdk:
 	$(XSDK) -workspace $(O)
 .PHONY: xsdk
 
-# show logs
-metalog:
-	cat $(O)/.metadata/.log
-sdklog:
-	cat $(O)/SDK.log
-.PHONY: sdklog metalog
-
 # clean all projects
 clean:
 	$(XSCT) -eval 'setws {$(O)}; \
 		projects -clean -type all'
 .PHONY: clean
-
-# remove workspace
-distclean:
-	rm -fr $(O)
-.PHONY: distclean

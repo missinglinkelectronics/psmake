@@ -5,7 +5,7 @@
      init_platform();
  
 -    print("Hello World\n\r");
-+    print("Hello World XSDK Build System\n\r");
++    print("Hello World XSDK Makefile\n\r");
  
      cleanup_platform();
      return 0;
