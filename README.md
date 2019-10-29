@@ -34,6 +34,7 @@ following components:
 
 * PetaLinux wrapper Makefile
 * Xilinx Software Development Kit (XSDK) convenience Makefile
+* Xilinx Scout convenience Makefile
 
 
 ## PetaLinux Wrapper Makefile
@@ -476,6 +477,373 @@ In addition, the following generic Makefile targets are available:
 
 `xsdk`
 : Run XSDK.
+
+`clean`
+: Clean all projects.
+
+`distclean`
+: Remove workspace.
+
+
+### Extending
+
+The build configuration file can be extended with standard Makefile targets for
+e.g. uploading and running build artifacts via JTAG.
+
+
+## Scout Makefile
+
+The Scout Makefile provides a declarative wrapper around the Xilinx Software
+Command-Line Tool (XSCT) and Bootgen to streamline the build of Xilinx Scout
+projects.
+
+
+### Supported Platforms
+
+Scout is supported in Early Access release v2019.1. So far, there is a focus on
+the previous XSDK use cases; while SDAccel/SDSoC use cases might work as well,
+they are not supported yet. The Makefile should run on all underlying Linux OSs
+supported by Scout, but not Windows. However, testing is only conducted on
+Ubuntu 18.04 LTS (Bionic Beaver) as of now.
+
+
+### Build Configuration Syntax
+
+The Scout Makefile is configured via a custom Makefile syntax as documented in
+the following sections.
+
+
+#### Repositories
+
+A software repository is a directory that holds third-party software
+components, as well as custom drivers, libraries, and operating systems. You
+can register repositories in the workspace by adding the respective path to the
+`REPOS` variable. In addition, you can also register existing platforms by
+adding the respective path to the `PLATS` variable.
+
+
+#### Platform
+
+The Platform captures all the information from a hardware design that is
+required to write, debug and deploy applications for that hardware. In the
+Scout Makefile, there is exactly one platform called `plat` by default [^1].
+The platform is either derived from
+
+- a Device Support Archive (DSA) or Hardware Description File (HDF) [^2].
+- an existing platform via the corresponding XPFM file.
+
+See section "Usage" on how to import one of these artifacts during build.
+
+[^1]: The platform name can be changed with the `PLAT_PRJ` variable if
+      necessary.
+[^2]: We will subsume these different file formats under the term Hardware
+      Platform hereafter.
+
+
+#### System Configurations
+
+A System Configuration is a collection of one or more domains (BSPs) assigned
+to a platform. A platform has at least one system configuration, where each
+processor instance (i.e. core) can be assigned to exactly one domain; therefore
+multiple domain-to-processer instance mappings need different system
+configurations.
+
+System configurations have no options as of now; so the respective domain
+option only needs to assign a name.
+
+#### Domains (BSP)
+
+A Domain or Board Support Package (BSP) is a collection of libraries and
+drivers that form the basis of software applications (see section
+"Applications"). There can be only one domain for each processor instance (i.e.
+core).
+
+Domains are registered by adding their name to the `DOMAIN_PRJS` list. They can
+then be configured by prefixing the corresponding option with their name:
+
+    DOMAIN_PRJS += fsbl_bsp
+    fsbl_bsp_SYSCONFIG = fsbl_bsp_syscfg
+    fsbl_bsp_PROC = psu_cortexa53_0
+    fsbl_bsp_IS_FSBL = yes
+    fsbl_bsp_LIBS = xilffs xilsecure xilpm
+    fsbl_bsp_POST_CREATE_TCL = configbsp -bsp fsbl_bsp use_strfunc 1
+
+    DOMAIN_PRJS += gen_bsp
+    gen_bsp_SYSCONFIG = gen_bsp_syscfg
+    gen_bsp_PROC = psu_cortexa53_0
+    gen_bsp_EXTRA_CFLAGS = -g -Wall -Wextra -Os
+    gen_bsp_STDOUT = psu_uart_1
+
+The following domain options are available:
+
+`SYSCONFIG`
+: Reference to system configuration. Required.
+
+`OS`
+: Operating system type. Optional, defaults to `standalone`. Run `repo -os` in
+XSCT to get a list of all OSs.
+
+`PROC`
+: Processor instance. Run `toolchain` in XSCT to get a list of supported
+processor types.
+
+`IS_FSBL`
+: If `yes`, apply non-default BSP settings for FSBL.
+
+`EXTRA_CFLAGS`
+: Additional compiler flags (default `-g -Wall -Wextra`). The default
+optimization level of `-O2` can be overriden with this variable.
+
+`STDIN`
+: Select UART for standard input.
+
+`STDOUT`
+: Select UART for standard output.
+
+`LIBS`
+: List of libraries to be added to the domain. Run `repo -lib` in XSCT to get a
+list of available libraries.
+
+`POST_CREATE_TCL`
+: Hook for adding extra Tcl commands after the domain has been created. Can be
+used to configure BSP settings (via the `configbsp` command) not available in
+the Scout Makefile.
+
+
+#### Applications
+
+Application projects are your final application containers. They can
+either be derived from a template or contain your own source files. Each
+application project must be linked to exactly one Domain (BSP).
+
+Application projects are registered by adding their name to the `APP_PRJS`
+list. They can then be configured by prefixing the corresponding option with
+their name:
+
+    APP_PRJS += fsbl
+    fsbl_TMPL = Zynq MP FSBL
+    fsbl_DOMAIN = fsbl_bsp
+    fsbl_CPPSYMS = FSBL_DEBUG_DETAILED
+
+    APP_PRJS += helloworld
+    helloworld_TMPL = Hello World
+    helloworld_DOMAIN = gen_bsp
+    helloworld_BCFG = Debug
+    helloworld_PATCH = helloworld.patch
+    helloworld_SED = platform.c;baud_rate.sed
+
+The following application project options are available:
+
+`TMPL`
+: Name of the template to base the application project on. Run `repo -apps` in
+XSCT to get a list of available application templates.
+
+`PROC`
+: Processor instance. Run `toolchain` in XSCT to get a list of supported
+processor types.
+
+`DOMAIN`
+: Reference to domain (BSP). Required.
+
+`SYSCONFIG`
+: Reference to system configuration. Optional if system configuration name is
+already defined in the referenced domain. Required if `PLAT` option is
+specified.
+
+`PLAT`
+: Reference to platform. Use this to base the application on a different
+platform than the default `plat`. The platform must be available in the
+platform repository; see section "Repositories". Mutually exclusive with `HW`
+option.
+
+`HW`
+: Path to hardware platform file (DSA, HDF or XPFM). Use this to base the
+application on a hardware platform file instead of the `plat` platform.
+Mutually exclusive with `PLAT`.
+
+`SRC`
+: List of space-separated source files to be added to the application. For each
+list entry, a symlink in the `src` directory of the respective application
+project will be created that points towards the corresponding source file.
+
+`PATCH`
+: List of space-separated patch file entries. Patches are applied in the base
+directory of the respective application project. A patch file list entry has
+the format `<patchfile>[;stripnum]`, where `stripnum` is the optional number of
+leading slashes to be stripped from each file name found in the patch file
+(default is 1).
+
+`SED`
+: List of space-separated file entries to be transformed with sed (stream
+editor). Sed is run in the base directory of the respective application
+project. A sed list entry has the format `<srcfile>;<sedfile>`, where
+`<srcfile>` is the file to be transformed and `<sedfile>` the sed script file.
+
+`BCFG`
+: Build configuration. Can either be `Release` (default) or `Debug`.
+
+`OPT`
+: Compiler optimization level. Can either be `None (-O0)`, `Optimize (-O1)`,
+`Optimize more (-O2)` (default), `Optimize most (-O3)`, `Optimize for size
+(-Os)`.
+
+`CPPSYMS`
+: List of preprocessor symbols (e.g. `MYSYMBOL=1`).
+
+`POST_CREATE_TCL`
+: Hook for adding extra Tcl commands after the application project has been
+created. Can be used to set application project configuration parameters (via
+the `configapp` command) not available in the Scout Makefile.
+
+
+#### Bootgen
+
+Bootgen is a Xilinx tool that merges build artifacts into a boot image
+according to a Boot Image Format (BIF) file. The Scout Makefile can generate
+BIF files and invoke Bootgen subsequently.
+
+Bootgen projects are registered by adding their name to the `BOOTGEN_PRJS`
+list. They can then be configured by prefixing the corresponding option with
+their name:
+
+    BOOTGEN_PRJS += bootbin
+    bootbin_BIF_ARCH = zynqmp
+
+The following Bootgen project options are available:
+
+`BIF_ARCH`
+: Device architecture. Run `bootgen` and see description of `-arch` option for
+a list of supported architectures.
+
+`BIF_ARGS_EXTRA`
+: Add additional Bootgen arguments for special operations like key generation.
+
+`NO_OUTPUT`
+: If `yes`', do not write a boot image file. Required for certain operations
+like key generation.
+
+`FLASH_TYPE`
+: Flash memory type. Run `program_flash` and see description of option
+`-flash_type` to get a list of supported memory types. Only needed for `flash`
+target (see section "Usage").
+
+`FLASH_FSBL`
+: FSBL used for flashing. Only needed for `flash` target (see section "Usage").
+
+`FLASH_OFF`
+: Offset within the flash memory at which the image should be written. Only
+needed for `flash` target (see section "Usage").
+
+BIF attributes are then registered by adding their name to the `BIF_ATTRS`
+list. They can then be configured by prefixing the `BIF_ATTR` and `BIF_FILE`
+variables with the Bootgen project name and BIF attribute name:
+
+    bootbin_BIF_ATTRS = fsbl helloworld
+    bootbin_fsbl_BIF_ATTR = bootloader, destination_cpu=a53-0
+    bootbin_fsbl_BIF_FILE = fsbl/$(fsbl_BCFG)/fsbl.elf
+    bootbin_helloworld_BIF_ATTR = destination_cpu=a53-0
+    bootbin_helloworld_BIF_FILE = helloworld/$(helloworld_BCFG)/helloworld.elf
+
+This example is translated to the following BIF file:
+
+    bootbin:
+    {
+        [bootloader, destination_cpu=a53-0] fsbl/Release/fsbl.elf
+        [destination_cpu=a53-0] helloworld/Debug/helloworld.elf
+    }
+
+The file name of a bitstream depends on the Vivado design and is often not
+known before the HDF has been extracted. In these cases, by convention, one
+should point the corresponding `BIF_FILE` option to a variable named like
+`BIT`:
+
+    bootbin_bit_BIF_ATTR = destination_device=pl
+    bootbin_bit_BIF_FILE = $(BIT)
+
+The `BIT` variable must then be provided on invocation:
+
+    $ make HDF=<path-to-your-hdf> BIT=hw/<bitstream>.bit
+
+Optionally, one can provide a default as well:
+
+    BIT ?= hw/design_1_wrapper.bit
+
+
+### Setup
+
+Create a symlink named `Makefile` to the `scout.mk` file:
+
+    $ ln -s ../scripts/scout.mk Makefile
+
+Add the `build` directory to your `.gitignore`.
+
+By default, the Scout Makefile looks for the build configuration in
+`./default.mk`. If you choose a different file name (or like to have multiple
+build configurations), you can specify the path with the `CFG` variable.
+
+Write your build configuration as documented in section "Makefile syntax".
+Instead of writing the build configuration from scratch, you can also copy
+`templates/scout/default.mk` into your working directory.
+
+
+### Usage
+
+Import either a Hardware Platform file by executing
+
+    $ make HW_PLAT=<path-to-your-hw-platform>
+
+or an existing platform via an XPFM file:
+
+    $ make XPFM=<path-to-xpfm>
+
+Without specyfing a further target, all projects will be built.
+
+The Scout Makefile creates a new Scout workspace as a subfolder in directory
+`build` named `<cfg-file-name>_<date>-<time>_<git-commit-id>`. A new Scout
+workspace is created on each invocation. If you would like to run the Scout
+Makefile on a specific workspace instead of creating a new one, you can use the
+`O` variable:
+
+    $ make O=build/<cfg-file-name>_<date>-<time>_<git-commit-id>
+
+The Scout Makefile dynamically creates Makefile targets according to the build
+configuration. Each domain, application project and Bootgen project is assigned
+a build target with the same name. Additionally each domain and application
+project feature a `clean` and `distclean` target separated by `_`.  In order to
+e.g. clean the application project `helloworld`, one would execute:
+
+    $ make helloworld_clean
+
+Bootgen projects come with a `flash` target to write the boot image onto a
+board via JTAG. In order to e.g. flash the Bootgen project `bootbin`, one would
+execute:
+
+    $ make bootbin_flash HW_SERVER_URL=<hw-server-url>
+
+In addition, the following generic Makefile targets are available:
+
+`plat`
+: Build the platform project. Either provide a path to a hardware platform file
+(DSA or HDF) via the `HW_PLAT` variable, or to an existing platform XPFM file
+via the `XPFM` variable.
+
+`plat_distclean`
+: Clean the platform project.
+
+`generate`
+: Generate all projects.
+
+`build` (default)
+: Build all projects.
+
+`metalog`
+: Show meta log.
+
+`scoutlog`
+: Show Scout log.
+
+`scout`
+: Run Scout.
 
 `clean`
 : Clean all projects.
