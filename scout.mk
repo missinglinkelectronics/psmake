@@ -259,7 +259,8 @@ endif
 	$(XSCT) -eval 'setws {$(O)}; \
 		app clean -name {$(1)}'
 
-$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(1)/src/lscript.ld
+__$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
+$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(1)/src/lscript.ld $$(__$(1)_SRC)
 	$(XSCT) -eval 'setws {$(O)}; \
 		app build -name {$(1)}'
 

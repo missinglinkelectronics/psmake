@@ -209,7 +209,8 @@ ifneq ($$(strip $$($(1)_SED)),)
 	$$(foreach SED,$$($(1)_SED),$(call sed-src,$(1)/src,$$(SED))) :
 endif
 
-$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$$($(1)_BSP)/$$($(1)_PROC)/lib/libxil.a $(O)/$(1)/src/lscript.ld
+__$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
+$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$$($(1)_BSP)/$$($(1)_PROC)/lib/libxil.a $(O)/$(1)/src/lscript.ld $$(__$(1)_SRC)
 	$(XSCT) -eval 'setws {$(O)}; \
 		projects -build -type app -name {$(1)}'
 
