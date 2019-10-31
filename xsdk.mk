@@ -31,6 +31,10 @@
 ##
 ################################################################################
 
+ifeq ($(XILINX_VIVADO),)
+$(error XILINX_VIVADO is unset. This Makefile must be invoked from within a Vivado/XSDK environment)
+endif
+
 MAKEFILE_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 all: build

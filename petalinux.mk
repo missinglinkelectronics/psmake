@@ -30,6 +30,10 @@
 ##
 ################################################################################
 
+ifeq ($(PETALINUX_VER),)
+$(error PETALINUX_VER is unset. This Makefile must be invoked from within a PetaLinux environment)
+endif
+
 MAKEFILE_PATH = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # default target

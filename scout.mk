@@ -30,6 +30,10 @@
 ##
 ################################################################################
 
+ifeq ($(XILINX_SCOUT),)
+$(error XILINX_SCOUT is unset. This Makefile must be invoked from within a Scout environment)
+endif
+
 MAKEFILE_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 all: build
