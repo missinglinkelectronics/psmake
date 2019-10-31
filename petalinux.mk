@@ -212,11 +212,11 @@ flash: flash-boot flash-kernel
 mrproper:
 	petalinux-build $(GEN_ARGS) -x mrproper
 ifeq ($(CLEAN_HDF),1)
-	cd project-spec/hw-description/ && \
+	-cd project-spec/hw-description/ && \
 		ls -1 | grep -v -e ^metadata$$ | xargs rm -fr
 endif
 	rm -rf project-spec/meta-plnx-generated/
-	find pre-built/ -type f -not -name 'pmu_rom_qemu_sha3.elf' \
+	-find pre-built/ -type f -not -name 'pmu_rom_qemu_sha3.elf' \
 		-not -name 'system.dtb' \
 		-not -name 'linux-boot.*' \
 		-delete
