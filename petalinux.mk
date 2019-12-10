@@ -173,10 +173,18 @@ config-rootfs: $(PRJ_HDF)
 	petalinux-config $(GEN_ARGS) -c rootfs
 
 build: $(PRJ_HDF)
+ifneq ($(shell grep CONFIG_YOCTO_BB_NO_NETWORK=y project-spec/configs/config),)
 	$(call trap-update-mirror,__BLD_ARGS=\"$(GEN_ARGS)\" $(MAKE) __build)
+else
+	__BLD_ARGS="$(GEN_ARGS)" $(MAKE) __build
+endif
 
 sdk: $(PRJ_HDF)
+ifneq ($(shell grep CONFIG_YOCTO_BB_NO_NETWORK=y project-spec/configs/config),)
 	$(call trap-update-mirror,__BLD_ARGS=\"$(GEN_ARGS) -s\" $(MAKE) __build)
+else
+	__BLD_ARGS="$(GEN_ARGS) -s" $(MAKE) __build
+endif
 
 __build:
 ifeq ($(UPDATE_MIRROR),1)
