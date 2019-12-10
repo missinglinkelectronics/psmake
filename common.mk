@@ -113,12 +113,21 @@ define gen-bif-attr
 \t[$$($(1)_$(2)_BIF_ATTR)] $$($(1)_$(2)_BIF_FILE)\n
 endef
 
+# arg1: Bootgen project
+# arg2: BIF attribute
+define gen-bootgen-dep
+$$(if $$(findstring yes,$$($(1)_$(2)_BIF_FILE_NO_DEP)),,\
+	$(O)/$$($(1)_$(2)_BIF_FILE))
+endef
+
 define gen-bif-rule
 $(1)_FLASH_TYPE ?=
 $(1)_FLASH_FSBL ?=
 $(1)_FLASH_OFF ?= 0
+$(1)_BOOTGEN_DEP = $$(foreach BIF_ATTR,$$($(1)_BIF_ATTRS),\
+	$(call gen-bootgen-dep,$(1),$$(BIF_ATTR)))
 
-$(O)/$(1)/$(1).bif: $(BLD_APPS_DEP)
+$(O)/$(1)/$(1).bif: $$($(1)_BOOTGEN_DEP)
 	mkdir -p $(O)/$(1)
 	printf '$(1):\n{\n' > $(O)/$(1)/$(1).bif
 ifneq ($$(strip $$($(1)_BIF_ATTRS)),)
@@ -167,10 +176,6 @@ endef
 
 ###############################################################################
 # Common targets
-
-# generate make rules for bootgen projects, multiple
-$(foreach BOOTGEN_PRJ,$(BOOTGEN_PRJS),\
-	$(eval $(call gen-bif-rule,$(BOOTGEN_PRJ))))
 
 # show logs
 metalog:

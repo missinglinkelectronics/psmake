@@ -430,6 +430,19 @@ This example is translated to the following BIF file:
         [destination_cpu=a53-0] helloworld/Debug/helloworld.elf
     }
 
+Prerequisites to all `BIF_FILE`s are added to the corresponding BIF generation
+rules. If, however, the concerning file is created instead of consumed by
+Bootgen (e.g. key generation) or is not a file at all, one must set the
+`BIF_FILE_NO_DEP` variable to `yes`. For example:
+
+    ...
+    generate_pem_BIF_ARGS_EXTRA = -p zu9eg -generate_keys pem
+    ...
+    generate_pem_pskfile_BIF_ATTR = pskfile
+    generate_pem_pskfile_BIF_FILE = generate_pem/psk0.pem
+    generate_pem_pskfile_BIF_FILE_NO_DEP = yes
+    ...
+
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one
 should point the corresponding `BIF_FILE` option to a variable named like
@@ -789,6 +802,19 @@ This example is translated to the following BIF file:
         [bootloader, destination_cpu=a53-0] fsbl/Release/fsbl.elf
         [destination_cpu=a53-0] helloworld/Debug/helloworld.elf
     }
+
+Prerequisites to all `BIF_FILE`s are added to the corresponding BIF generation
+rules. If, however, the concerning file is created instead of consumed by
+Bootgen (e.g. key generation) or is not a file at all, one must set the
+`BIF_FILE_NO_DEP` variable to `yes`. For example:
+
+    ...
+    generate_pem_BIF_ARGS_EXTRA = -p zu9eg -generate_keys pem
+    ...
+    generate_pem_pskfile_BIF_ATTR = pskfile
+    generate_pem_pskfile_BIF_FILE = generate_pem/psk0.pem
+    generate_pem_pskfile_BIF_FILE_NO_DEP = yes
+    ...
 
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one

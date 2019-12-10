@@ -252,6 +252,10 @@ $(foreach BSP_PRJ,$(BSP_PRJS),\
 $(foreach APP_PRJ,$(APP_PRJS),\
 	$(eval $(call gen-app-rule,$(APP_PRJ),$(HW_PRJ))))
 
+# generate make rules for bootgen projects, multiple
+$(foreach BOOTGEN_PRJ,$(BOOTGEN_PRJS),\
+	$(eval $(call gen-bif-rule,$(BOOTGEN_PRJ))))
+
 # generate all (app) projects
 generate: $(GEN_APPS_DEP) $(GEN_BOOTGEN_DEP)
 .PHONY: generate

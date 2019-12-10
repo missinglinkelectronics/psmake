@@ -302,6 +302,10 @@ $(foreach DOMAIN_PRJ,$(DOMAIN_PRJS),\
 $(foreach APP_PRJ,$(APP_PRJS),\
 	$(eval $(call gen-app-rule,$(APP_PRJ),$(PLAT_PRJ))))
 
+# generate make rules for bootgen projects, multiple
+$(foreach BOOTGEN_PRJ,$(BOOTGEN_PRJS),\
+	$(eval $(call gen-bif-rule,$(BOOTGEN_PRJ))))
+
 # generate all projects
 generate: $(GEN_APPS_DEP) $(GEN_BOOTGEN_DEP)
 .PHONY: generate
