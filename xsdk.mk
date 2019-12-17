@@ -53,6 +53,7 @@ HDF ?=
 
 # user arguments, defaults, usually set via config.mk
 DEF_BSP_OS ?= standalone
+DEF_APP_LANG ?= C
 DEF_APP_BCFG ?= Release
 DEF_APP_OPT ?= Optimize more (-O2)
 DEF_APP_TMPL ?= Empty Application
@@ -185,6 +186,7 @@ endef
 define gen-app-rule
 $(1)_BSP ?=
 $(1)_PROC ?= $(call gen-app-proc-contents-rule,$$($(1)_BSP))
+$(1)_LANG ?= $(DEF_APP_LANG)
 $(1)_BCFG ?= $(DEF_APP_BCFG)
 $(1)_OPT ?= $(DEF_APP_OPT)
 $(1)_TMPL ?= $(DEF_APP_TMPL)
@@ -198,7 +200,7 @@ $(O)/$(1)/src/lscript.ld: $(O)/$$($(1)_BSP)/system.mss
 	$(XSCT) -eval 'setws {$(O)}; \
 		createapp -name {$(1)} -app {$$($(1)_TMPL)} \
 			-proc {$$($(1)_PROC)} -hwproject {$(2)} \
-			-bsp {$$($(1)_BSP)}; \
+			-bsp {$$($(1)_BSP)} -lang {$$($(1)_LANG)}; \
 		configapp -app {$(1)} build-config {$$($(1)_BCFG)}; \
 		configapp -app {$(1)} compiler-optimization {$$($(1)_OPT)}; \
 		$$(__$(1)_CPPSYMS_CCMD) \

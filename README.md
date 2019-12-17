@@ -336,6 +336,9 @@ XSCT to get a list of available application templates.
 : Processor instance. Run `toolchain` in XSCT to get a list of supported
 processor types.
 
+`LANG`
+: Programming language. Can be either `c` or `c++`.
+
 `BSP`
 : Reference to BSP. Required.
 
