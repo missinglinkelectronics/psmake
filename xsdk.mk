@@ -57,6 +57,11 @@ DEF_APP_LANG ?= C
 DEF_APP_BCFG ?= Release
 DEF_APP_OPT ?= Optimize more (-O2)
 DEF_APP_TMPL ?= Empty Application
+DEF_LIB_TYPE ?= static
+DEF_LIB_OS ?= standalone
+DEF_LIB_LANG ?= C
+DEF_LIB_BCFG ?= Release
+DEF_LIB_OPT ?= Optimize more (-O2)
 
 BSP_PRJS ?=
 APP_PRJS ?=
@@ -191,10 +196,17 @@ $(1)_BCFG ?= $(DEF_APP_BCFG)
 $(1)_OPT ?= $(DEF_APP_OPT)
 $(1)_TMPL ?= $(DEF_APP_TMPL)
 $(1)_CPPSYMS ?=
+$(1)_LIBS ?=
 
 ifneq ($$strip($$($(1)_CPPSYMS)),)
 __$(1)_CPPSYMS_CCMD = $$(foreach SYM,$$($(1)_CPPSYMS), \
 	configapp -app {$(1)} define-compiler-symbols {$$(SYM)};)
+endif
+ifneq ($$(strip $$($(1)_LIBS)),)
+__$(1)_LIBS_CCMD = $$(foreach LIB,$$($(1)_LIBS), \
+	configapp -app {$(1)} include-path {../../$$(LIB)/src}; \
+	configapp -app {$(1)} library-search-path {../../$$(LIB)/$$($$(LIB)_BCFG)}; \
+	configapp -app {$(1)} libraries {$$(LIB)};)
 endif
 $(O)/$(1)/src/lscript.ld: $(O)/$$($(1)_BSP)/system.mss
 	$(XSCT) -eval 'setws {$(O)}; \
@@ -204,6 +216,7 @@ $(O)/$(1)/src/lscript.ld: $(O)/$$($(1)_BSP)/system.mss
 		configapp -app {$(1)} build-config {$$($(1)_BCFG)}; \
 		configapp -app {$(1)} compiler-optimization {$$($(1)_OPT)}; \
 		$$(__$(1)_CPPSYMS_CCMD) \
+		$$(__$(1)_LIBS_CCMD) \
 		$$($(1)_POST_CREATE_TCL)'
 ifneq ($$(strip $$($(1)_SRC)),)
 	$$(foreach SRC,$$($(1)_SRC),$(call symlink-src,$(1),$$(SRC))) :
@@ -216,7 +229,7 @@ ifneq ($$(strip $$($(1)_SED)),)
 endif
 
 __$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
-$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$$($(1)_BSP)/$$($(1)_PROC)/lib/libxil.a $(O)/$(1)/src/lscript.ld $$(__$(1)_SRC)
+$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$$($(1)_BSP)/$$($(1)_PROC)/lib/libxil.a $(O)/$(1)/src/lscript.ld $$(__$(1)_SRC) $$($(1)_LIBS)
 	$(XSCT) -eval 'setws {$(O)}; \
 		projects -build -type app -name {$(1)}'
 
@@ -225,6 +238,80 @@ BLD_APPS_DEP += $(O)/$(1)/$$($(1)_BCFG)/$(1).elf
 
 # shortcut to build app, "make <app>"
 $(1): $(O)/$(1)/$$($(1)_BCFG)/$(1).elf
+.PHONY: $(1)
+
+$(1)_clean:
+	-$(XSCT) -eval 'setws {$(O)}; \
+		projects -clean -type app -name {$(1)}'
+.PHONY: $(1)_clean
+
+$(1)_distclean:
+	-$(XSCT) -eval 'setws {$(O)}; \
+		deleteprojects -name {$(1)}'
+.PHONY: $(1)_distclean
+endef
+
+###############################################################################
+# Libraries
+
+# arg1: lib name
+define gen-lib-rule
+$(1)_TYPE ?= $(DEF_LIB_TYPE)
+$(1)_PROC ?= $(DEF_LIB_PROC)
+$(1)_OS ?= $(DEF_LIB_OS)
+$(1)_LANG ?= $(DEF_LIB_LANG)
+ifeq ($$($(1)_PROC),psu_cortexa53)
+$(1)_ARCH ?= 64
+else
+$(1)_ARCH ?= 32
+endif
+$(1)_BCFG ?= $(DEF_LIB_BCFG)
+$(1)_OPT ?= $(DEF_LIB_OPT)
+$(1)_CPPSYMS ?=
+
+ifneq ($$strip($$($(1)_CPPSYMS)),)
+__$(1)_CPPSYMS_CCMD = $$(foreach SYM,$$($(1)_CPPSYMS), \
+	configapp -app {$(1)} define-compiler-symbols {$$(SYM)};)
+endif
+$(O)/$(1)/src:
+	$(XSCT) -eval 'setws {$(O)}; \
+		createlib -name {$(1)} -type {$$($(1)_TYPE)} \
+			-proc {$$($(1)_PROC)} -os {$$($(1)_OS)} \
+			-lang {$$($(1)_LANG)} -arch {$$($(1)_ARCH)}; \
+		configapp -app {$(1)} build-config {$$($(1)_BCFG)}; \
+		configapp -app {$(1)} compiler-optimization {$$($(1)_OPT)}; \
+		$$(__$(1)_CPPSYMS_CCMD) \
+		$$($(1)_POST_CREATE_TCL)'
+ifneq ($$(strip $$($(1)_SRC)),)
+	$$(foreach SRC,$$($(1)_SRC),$(call symlink-src,$(1),$$(SRC))) :
+endif
+
+__$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
+ifeq ($$($(1)_TYPE),shared)
+$(O)/$(1)/$$($(1)_BCFG)/lib$(1).so: $(O)/$(1)/src
+else
+$(O)/$(1)/$$($(1)_BCFG)/lib$(1).a: $(O)/$(1)/src
+endif
+	$(XSCT) -eval 'setws {$(O)}; \
+		projects -build -type app -name {$(1)}'
+# Workaround for missing "lib" prefix
+ifeq ($$($(1)_TYPE),shared)
+	ln -fs $(1).so $(O)/$(1)/$$($(1)_BCFG)/lib$(1).so
+endif
+
+GEN_LIBS_DEP += $(O)/$(1)/src
+ifeq ($$($(1)_TYPE),shared)
+BLD_LIBS_DEP += $(O)/$(1)/$$($(1)_BCFG)/lib$(1).so
+else
+BLD_LIBS_DEP += $(O)/$(1)/$$($(1)_BCFG)/lib$(1).a
+endif
+
+# shortcut to build lib, "make <lib>"
+ifeq ($$($(1)_TYPE),shared)
+$(1): $(O)/$(1)/$$($(1)_BCFG)/lib$(1).so
+else
+$(1): $(O)/$(1)/$$($(1)_BCFG)/lib$(1).a
+endif
 .PHONY: $(1)
 
 $(1)_clean:
@@ -253,6 +340,10 @@ $(foreach BSP_PRJ,$(BSP_PRJS),\
 # generate make rules for application projects, multiple
 $(foreach APP_PRJ,$(APP_PRJS),\
 	$(eval $(call gen-app-rule,$(APP_PRJ),$(HW_PRJ))))
+
+# generate make rules for library projects, multiple
+$(foreach LIB_PRJ,$(LIB_PRJS),\
+	$(eval $(call gen-lib-rule,$(LIB_PRJ))))
 
 # generate make rules for bootgen projects, multiple
 $(foreach BOOTGEN_PRJ,$(BOOTGEN_PRJS),\

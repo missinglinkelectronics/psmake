@@ -59,6 +59,12 @@ helloworld_BSP = gen_bsp
 helloworld_BCFG = Debug
 helloworld_PATCH = helloworld.patch
 helloworld_SED = platform.c;baud_rate.sed
+helloworld_LIBS = helloworldlib
+
+LIB_PRJS += helloworldlib
+helloworldlib_PROC = psu_cortexa53
+helloworldlib_BCFG = Debug
+helloworldlib_SRC = helloworldlib.c helloworldlib.h
 
 ################################################################################
 # Boot image

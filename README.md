@@ -327,6 +327,7 @@ their name:
     helloworld_BCFG = Debug
     helloworld_PATCH = helloworld.patch
     helloworld_SED = platform.c;baud_rate.sed
+    helloworld_LIBS = helloworldlib
 
 The following application project options are available:
 
@@ -373,10 +374,76 @@ project. A sed list entry has the format `<srcfile>;<sedfile>`, where
 `CPPSYMS`
 : List of preprocessor symbols (e.g. `MYSYMBOL=1`).
 
+`LIBS`
+: List of library projects the application depends on. The libraries are added
+to the include and library search paths and linked against the application.
+
 `POST_CREATE_TCL`
 : Hook for adding extra Tcl commands after the application project has been
 created. Can be used to set application project configuration parameters (via
 the `configapp` command) not available in the XSDK Makefile.
+
+
+#### Libraries
+
+Software library projects are collections of commonly used functions for your
+applications. Library projects are independent of the hardware platform
+specification.
+
+Library projects are registered by adding their name to the `LIB_PRJS` list.
+They can then be configured by prefixing the corresponding option with their
+name:
+
+    LIB_PRJS += helloworldlib
+    helloworldlib_PROC = psu_cortexa53
+    helloworldlib_BCFG = Debug
+    helloworldlib_SRC = helloworldlib.c libhelloworld.h
+
+The following library project options are available:
+
+`TYPE`
+: Library type. Can be either `static` (default) or `shared`. Type `shared` can
+only be used in combination with operating system type `linux`.
+
+`PROC`
+: Processor type. Can be either `ps7_cortex9`, `microblaze`, `psu_cortexa53` or
+`psu_cortexr5`. Required.
+
+`OS`
+: Operating system type. Can be either `standalone` (default) or `linux`. Type
+`linux` can only be used in combination with library type `shared`.
+
+`LANG`
+: Programming language. Can be either `c` (default) or `c++`.
+
+`ARCH`
+: Processor architecture. Can be 32 or 64 bit. Valid only for processors
+supporting multiple architectures (e.g. A53).
+
+`SRC`
+: List of space-separated source files to be added to the library. For each
+list entry, a symlink in the `src` directory of the respective library project
+will be created that points towards the corresponding source file.
+
+`BCFG`
+: Build configuration. Can either be `Release` (default) or `Debug`.
+
+`OPT`
+: Compiler optimization level. Can either be `None (-O0)`, `Optimize (-O1)`,
+`Optimize more (-O2)` (default), `Optimize most (-O3)`, `Optimize for size
+(-Os)`.
+
+`CPPSYMS`
+: List of preprocessor symbols (e.g. `MYSYMBOL=1`).
+
+`POST_CREATE_TCL`
+: Hook for adding extra Tcl commands after the library project has been
+created. Can be used to set library project configuration parameters (via
+the `configapp` command) not available in the XSDK Makefile.
+
+Since XSDK does not support building Linux apps, the combination of library
+type `shared` and operating system type `linux` is not officially supported by
+the XSDK Makefile.
 
 
 #### Bootgen
