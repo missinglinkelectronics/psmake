@@ -337,7 +337,7 @@ XSCT to get a list of available application templates.
 processor types.
 
 `LANG`
-: Programming language. Can be either `c` or `c++`.
+: Programming language. Can be either `c` (default) or `c++`.
 
 `BSP`
 : Reference to BSP. Required.
