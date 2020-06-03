@@ -63,7 +63,17 @@ LOCAL_CONF = build/conf/local.conf
 SOURCE_DOWNLOADS = build/downloads
 SOURCE_MIRROR = $(shell awk 'BEGIN { FS = "file://" } /PREMIRRORS =/ { gsub(/ \\n \\/, "", $$2); print $$2 }' build/conf/plnxtool.conf)
 
-PRJ_HDF = project-spec/hw-description/system.hdf
+# location of imported .hdf/.xsa file
+ifeq ($(HDF),)
+# if user does not specify HDF, select PRJ_HDF from existing .hdf or .xsa file
+PRJ_HDF = $(wildcard project-spec/hw-description/*.hdf project-spec/hw-description/*.xsa)
+else
+# if user specifies HDF, let PRJ_HDF depend on HDF suffix and assume "system" as prefix
+PRJ_HDF = project-spec/hw-description/system$(suffix $(HDF))
+endif
+ifeq ($(PRJ_HDF),)
+$(error missing HDF, run with argument HDF=<path-to-.hdf-or-.xsa-file>)
+endif
 
 # defaults for flash-* targets
 FLASH_TYPE ?= qspi_single
@@ -155,14 +165,9 @@ FORCE:
 
 # force only if "gethdf" is one of the targets
 $(PRJ_HDF): $(HDF) $(subst gethdf,FORCE,$(findstring gethdf,$(MAKECMDGOALS)))
-ifeq ($(HDF),)
-	@echo "error: missing HDF, run with argument HDF=<path-to-.hdf-file>"
-	@false
-else
 	mkdir -p $(dir $(TMPHDF))
 	ln -sf $(realpath $(HDF)) $(TMPHDF)
 	petalinux-config $(GEN_ARGS) --get-hw-description $(dir $(TMPHDF)) --oldconfig
-endif
 
 gethdf: $(PRJ_HDF)
 

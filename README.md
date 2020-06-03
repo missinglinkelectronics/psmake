@@ -60,9 +60,10 @@ In your PetaLinux project directory, create a symlink named `Makefile` to the
 
 Then, execute:
 
-    $ make HDF=<path-to-your-hdf>
+    $ make HDF=<path-to-your-.hdf-or-.xsa-file>
 
-to import a Hardware Description File (HDF) and build the PetaLinux project.
+to import a Hardware Description File (HDF) or a XSA file and build the
+PetaLinux project.
 
 
 ### Usage
@@ -70,8 +71,8 @@ to import a Hardware Description File (HDF) and build the PetaLinux project.
 The following Makefile targets are provided:
 
 `gethdf`
-: Initialize the project with a Hardware Description File (HDF). You must
-provide a HDF via the `HDF` variable.
+: Initialize the project with a Hardware Description File (HDF) or a XSA
+file. You must provide a HDF or XSA file via the `HDF` variable.
 
 `config`
 : Configure system-level options.
