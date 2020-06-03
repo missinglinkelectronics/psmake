@@ -85,6 +85,10 @@ BSP ?=
 BOOT_ARG_EXTRA ?=
 UPDATE_MIRROR ?= 0
 
+ifneq ($(HDF),)
+TMPHDF ?= build/psmake/tmphdf/$(notdir $(HDF))/$(notdir $(HDF))
+endif
+
 # petalinux-* generic arguments
 ifeq ($(V),1)
 GEN_ARGS = -v
@@ -155,7 +159,9 @@ ifeq ($(HDF),)
 	@echo "error: missing HDF, run with argument HDF=<path-to-.hdf-file>"
 	@false
 else
-	petalinux-config $(GEN_ARGS) --get-hw-description $(dir $(HDF)) --oldconfig
+	mkdir -p $(dir $(TMPHDF))
+	ln -sf $(realpath $(HDF)) $(TMPHDF)
+	petalinux-config $(GEN_ARGS) --get-hw-description $(dir $(TMPHDF)) --oldconfig
 endif
 
 gethdf: $(PRJ_HDF)
