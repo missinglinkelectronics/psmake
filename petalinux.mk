@@ -104,9 +104,11 @@ ifeq ($(V),1)
 GEN_ARGS = -v
 endif
 # petalinux-package --boot arguments
+ifneq ($(BIT),no)
 BOOT_ARG_FPGA = --fpga
 ifneq ($(BIT),)
 BOOT_ARG_FPGA += $(BIT)
+endif
 endif
 #  no need to specify --fsbl if default is to be used
 BOOT_ARG_FSBL =

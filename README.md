@@ -92,10 +92,11 @@ file. You must provide a HDF or XSA file via the `HDF` variable.
 `package-boot`
 : Package boot image. You can provide different binaries from the default ones
 for bitstream, FSBL, ATF, PMU firmware and U-Boot via the `BIT`, `FSBL`, `ATF`,
-`PMUFW` and `UBOOT` variables, respectively. To skip packaging FSBL, ATF or PMU
-firmware, set the respective variable to `no`. Additional boot arguments can be
-specified with `BOOT_ARG_EXTRA`; run `petalinux-package --boot --help` for a
-list of options. The output path can be changed with the `BOOT` variable.
+`PMUFW` and `UBOOT` variables, respectively. To skip packaging bitstream, FSBL,
+ATF or PMU firmware, set the respective variable to `no`. Additional boot
+arguments can be specified with `BOOT_ARG_EXTRA`; run `petalinux-package --boot
+--help` for a list of options. The output path can be changed with the `BOOT`
+variable.
 
 `package-prebuilt`
 : Copy built artifacts to pre-built directory.
