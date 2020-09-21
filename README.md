@@ -34,7 +34,7 @@ following components:
 
 * PetaLinux wrapper Makefile
 * Xilinx Software Development Kit (XSDK) convenience Makefile
-* Xilinx Scout convenience Makefile
+* Xilinx Vitis convenience Makefile
 
 
 ## PetaLinux Wrapper Makefile
@@ -614,25 +614,25 @@ The build configuration file can be extended with standard Makefile targets for
 e.g. uploading and running build artifacts via JTAG.
 
 
-## Scout Makefile
+## Vitis Makefile
 
-The Scout Makefile provides a declarative wrapper around the Xilinx Software
-Command-Line Tool (XSCT) and Bootgen to streamline the build of Xilinx Scout
+The Vitis Makefile provides a declarative wrapper around the Xilinx Software
+Command-Line Tool (XSCT) and Bootgen to streamline the build of Xilinx Vitis
 projects.
 
 
 ### Supported Platforms
 
-Scout is supported in Early Access release v2019.1. So far, there is a focus on
-the previous XSDK use cases; while SDAccel/SDSoC use cases might work as well,
-they are not supported yet. The Makefile should run on all underlying Linux OSs
-supported by Scout, but not Windows. However, testing is only conducted on
-Ubuntu 18.04 LTS (Bionic Beaver) as of now.
+Vitis is supported in v2020.1. So far, there is a focus on the previous XSDK
+use cases; while SDAccel/SDSoC use cases might work as well, they are not
+supported yet. The Makefile should run on all underlying Linux OSs supported by
+Vitis, but not Windows. However, testing is only conducted on Ubuntu 18.04 LTS
+(Bionic Beaver) as of now.
 
 
 ### Build Configuration Syntax
 
-The Scout Makefile is configured via a custom Makefile syntax as documented in
+The Vitis Makefile is configured via a custom Makefile syntax as documented in
 the following sections.
 
 
@@ -649,7 +649,7 @@ adding the respective path to the `PLATS` variable.
 
 The Platform captures all the information from a hardware design that is
 required to write, debug and deploy applications for that hardware. In the
-Scout Makefile, there is exactly one platform called `plat` by default [^1].
+Vitis Makefile, there is exactly one platform called `plat` by default [^1].
 The platform is either derived from
 
 - a Device Support Archive (DSA) or Hardware Description File (HDF) [^2].
@@ -663,17 +663,6 @@ See section "Usage" on how to import one of these artifacts during build.
       Platform hereafter.
 
 
-#### System Configurations
-
-A System Configuration is a collection of one or more domains (BSPs) assigned
-to a platform. A platform has at least one system configuration, where each
-processor instance (i.e. core) can be assigned to exactly one domain; therefore
-multiple domain-to-processer instance mappings need different system
-configurations.
-
-System configurations have no options as of now; so the respective domain
-option only needs to assign a name.
-
 #### Domains (BSP)
 
 A Domain or Board Support Package (BSP) is a collection of libraries and
@@ -685,22 +674,17 @@ Domains are registered by adding their name to the `DOMAIN_PRJS` list. They can
 then be configured by prefixing the corresponding option with their name:
 
     DOMAIN_PRJS += fsbl_bsp
-    fsbl_bsp_SYSCONFIG = fsbl_bsp_syscfg
     fsbl_bsp_PROC = psu_cortexa53_0
     fsbl_bsp_IS_FSBL = yes
     fsbl_bsp_LIBS = xilffs xilsecure xilpm
     fsbl_bsp_POST_CREATE_TCL = configbsp -bsp fsbl_bsp use_strfunc 1
 
     DOMAIN_PRJS += gen_bsp
-    gen_bsp_SYSCONFIG = gen_bsp_syscfg
     gen_bsp_PROC = psu_cortexa53_0
     gen_bsp_EXTRA_CFLAGS = -g -Wall -Wextra -Os
     gen_bsp_STDOUT = psu_uart_1
 
 The following domain options are available:
-
-`SYSCONFIG`
-: Reference to system configuration. Required.
 
 `OS`
 : Operating system type. Optional, defaults to `standalone`. Run `repo -os` in
@@ -730,7 +714,7 @@ list of available libraries.
 `POST_CREATE_TCL`
 : Hook for adding extra Tcl commands after the domain has been created. Can be
 used to configure BSP settings (via the `configbsp` command) not available in
-the Scout Makefile.
+the Vitis Makefile.
 
 
 #### Applications
@@ -767,11 +751,6 @@ processor types.
 
 `DOMAIN`
 : Reference to domain (BSP). Required.
-
-`SYSCONFIG`
-: Reference to system configuration. Optional if system configuration name is
-already defined in the referenced domain. Required if `PLAT` option is
-specified.
 
 `PLAT`
 : Reference to platform. Use this to base the application on a different
@@ -816,13 +795,13 @@ project. A sed list entry has the format `<srcfile>;<sedfile>`, where
 `POST_CREATE_TCL`
 : Hook for adding extra Tcl commands after the application project has been
 created. Can be used to set application project configuration parameters (via
-the `configapp` command) not available in the Scout Makefile.
+the `configapp` command) not available in the Vitis Makefile.
 
 
 #### Bootgen
 
 Bootgen is a Xilinx tool that merges build artifacts into a boot image
-according to a Boot Image Format (BIF) file. The Scout Makefile can generate
+according to a Boot Image Format (BIF) file. The Vitis Makefile can generate
 BIF files and invoke Bootgen subsequently.
 
 Bootgen projects are registered by adding their name to the `BOOTGEN_PRJS`
@@ -907,19 +886,19 @@ Optionally, one can provide a default as well:
 
 ### Setup
 
-Create a symlink named `Makefile` to the `scout.mk` file:
+Create a symlink named `Makefile` to the `vitis.mk` file:
 
-    $ ln -s ../scripts/scout.mk Makefile
+    $ ln -s ../scripts/vitis.mk Makefile
 
 Add the `build` directory to your `.gitignore`.
 
-By default, the Scout Makefile looks for the build configuration in
+By default, the Vitis Makefile looks for the build configuration in
 `./default.mk`. If you choose a different file name (or like to have multiple
 build configurations), you can specify the path with the `CFG` variable.
 
 Write your build configuration as documented in section "Makefile syntax".
 Instead of writing the build configuration from scratch, you can also copy
-`templates/scout/default.mk` into your working directory.
+`templates/vitis/default.mk` into your working directory.
 
 
 ### Usage
@@ -934,15 +913,15 @@ or an existing platform via an XPFM file:
 
 Without specyfing a further target, all projects will be built.
 
-The Scout Makefile creates a new Scout workspace as a subfolder in directory
-`build` named `<cfg-file-name>_<date>-<time>_<git-commit-id>`. A new Scout
-workspace is created on each invocation. If you would like to run the Scout
+The Vitis Makefile creates a new Vitis workspace as a subfolder in directory
+`build` named `<cfg-file-name>_<date>-<time>_<git-commit-id>`. A new Vitis
+workspace is created on each invocation. If you would like to run the Vitis
 Makefile on a specific workspace instead of creating a new one, you can use the
 `O` variable:
 
     $ make O=build/<cfg-file-name>_<date>-<time>_<git-commit-id>
 
-The Scout Makefile dynamically creates Makefile targets according to the build
+The Vitis Makefile dynamically creates Makefile targets according to the build
 configuration. Each domain, application project and Bootgen project is assigned
 a build target with the same name. Additionally each domain and application
 project feature a `clean` and `distclean` target separated by `_`.  In order to
@@ -975,11 +954,11 @@ via the `XPFM` variable.
 `metalog`
 : Show meta log.
 
-`scoutlog`
-: Show Scout log.
+`vitislog`
+: Show Vitis log.
 
-`scout`
-: Run Scout.
+`vitis`
+: Run Vitis.
 
 `clean`
 : Clean all projects.

@@ -3,7 +3,7 @@
 #
 ################################################################################
 ##
-## Copyright 2019 Missing Link Electronics, Inc.
+## Copyright 2019-2020 Missing Link Electronics, Inc.
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@
 ##
 ################################################################################
 ##
-##  File Summary   : Scout convenience wrapper
+##  File Summary   : Vitis convenience wrapper
 ##
-##                   Uses: scout xsct
+##                   Uses: vitis xsct
 ##
 ################################################################################
 
-ifeq ($(XILINX_SCOUT),)
-$(error XILINX_SCOUT is unset. This Makefile must be invoked from within a Scout environment)
+ifeq ($(XILINX_VITIS),)
+$(error XILINX_VITIS is unset. This Makefile must be invoked from within a Vitis environment)
 endif
 
 MAKEFILE_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -67,7 +67,7 @@ APP_PRJS ?=
 # user arguments, rarely modified
 PLAT_PRJ ?= plat
 XSCT ?= xsct
-SCOUT ?= scout
+VITIS ?= vitis
 
 ###############################################################################
 # Platform repos
@@ -93,7 +93,7 @@ endif
 # arg1: platform name
 # arg2: path to platform file
 define gen-plat-rule
-$(O)/$(1)/_platform/dsa/$(1).stamp: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
+$(O)/$(1)/hw/$(1).stamp: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
 ifneq ($(HW_PLAT),)
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform create -name {$(1)} -hw {$(2)}'
@@ -110,7 +110,7 @@ endif
 	touch $$@
 
 # shortcut to create platform, "make <plat>"
-$(1): $(O)/$(1)/_platform/dsa/$(1).stamp
+$(1): $(O)/$(1)/hw/$(1).stamp
 .PHONY: $(1)
 
 $(1)_distclean:
@@ -120,29 +120,11 @@ $(1)_distclean:
 endef
 
 ###############################################################################
-# System Configurations
-
-# arg1: sysconfig name
-# arg2: platform name
-define gen-sysconfig-rule
-$(O)/$(2)/_platform/$(1).stamp: $(O)/$(2)/_platform/dsa/$(2).stamp
-	$(XSCT) -eval 'setws {$(O)}; \
-		platform active {$(2)}; \
-		sysconfig create -name {$(1)}'
-	touch $$@
-
-# shortcut to create sysconfig, "make <sysconfig>"
-$(1): $(O)/$(2)/_platform/$(1).stamp
-.PHONY: $(1)
-endef
-
-###############################################################################
 # Domains
 
 # arg1: domain name
 # arg2: platform name
 define gen-domain-rule
-$(1)_SYSCONFIG ?= $(DEF_SYSCONFIG)
 $(1)_PROC ?= $(DEF_DOMAIN_PROC)
 $(1)_OS ?= $(DEF_DOMAIN_OS)
 $(1)_LIBS ?=
@@ -153,7 +135,7 @@ $(1)_IS_FSBL ?=
 
 ifneq ($$strip($$($(1)_LIBS)),)
 __$(1)_LIBS_CCMD = $$(foreach LIB,$$($(1)_LIBS), \
-	bsp setlib {$$(LIB)};)
+	bsp setlib -name {$$(LIB)};)
 endif
 __$(1)_EXTRA_CCMD =
 ifneq ($$($(1)_EXTRA_CFLAGS),)
@@ -177,31 +159,35 @@ __$(1)_EXTRA_CCMD += \
 	bsp config {extra_compiler_flags} {-g -Wall -Wextra -Os -flto -ffat-lto-objects};
 endif
 
-$(O)/$(2)/_platform/$$($(1)_SYSCONFIG)/$(1)/bsp/Makefile: $(O)/$(2)/_platform/$$($(1)_SYSCONFIG).stamp
+$(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile: $(O)/$(2)/hw/$(2).stamp
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(2)}; \
-		sysconfig active {$$($(1)_SYSCONFIG)}; \
 		domain create -name {$(1)} -proc {$$($(1)_PROC)} \
 			-os {$$($(1)_OS)}; \
 		$$(__$(1)_LIBS_CCMD) \
 		$$(__$(1)_EXTRA_CCMD) \
-		$$($(1)_POST_CREATE_TCL)'
+		$$($(1)_POST_CREATE_TCL); \
+		bsp regenerate'
+ifneq ($$(strip $$($(1)_PATCH)),)
+	$$(foreach PATCH,$$($(1)_PATCH),$(call patch-src,$(1),$$(PATCH))) :
+endif
+ifneq ($$(strip $$($(1)_SED)),)
+	$$(foreach SED,$$($(1)_SED),$(call sed-src,$(1),$$(SED))) :
+endif
 
-# One cannot apply patches/sed scripts on domains (BSPs) as in xsdk.mk;
-# `platform generate` will override any modifications
-$(O)/$(2)/export/$(2)/sw/$$($(1)_SYSCONFIG)/$(1)/lscript.ld: $(O)/$(2)/_platform/$$($(1)_SYSCONFIG)/$(1)/bsp/Makefile
+
+$(O)/$(2)/export/$(2)/sw/$(2)/$(1)/bsplib/lib/libxil.a: $(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(2)}; \
-		platform generate'
+		platform generate -domains {$(1)}'
 
 # shortcut to create domain, "make <domain>"
-$(1): $(O)/$(2)/export/$(2)/sw/$$($(1)_SYSCONFIG)/$(1)/lscript.ld
+$(1): $(O)/$(2)/export/$(2)/sw/$(2)/$(1)/bsplib/lib/libxil.a
 .PHONY: $(1)
 
 $(1)_distclean:
 	-$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(2)}; \
-		sysconfig active {$$($(1)_SYSCONFIG)}; \
 		domain remove -name {$(1)}'
 .PHONY: $(1)_distclean
 endef
@@ -212,7 +198,6 @@ endef
 # arg1: app name
 # arg2: platform name
 define gen-app-rule
-$(1)_SYSCONFIG ?= $$($$($(1)_DOMAIN)_SYSCONFIG)
 $(1)_PROC ?= $(DEF_APP_PROC)
 $(1)_TMPL ?= $(DEF_APP_TMPL)
 $(1)_OS ?= $(DEF_APP_OS)
@@ -231,17 +216,15 @@ ifneq ($$($(1)_PLAT),)
 $(O)/$(1)/src/lscript.ld: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
 	$(XSCT) -eval 'setws {$(O)}; \
 		app create -name {$(1)} -platform {$$($(1)_PLAT)} \
-			-sysconfig {$$($(1)_SYSCONFIG)} \
 			-domain {$$($(1)_DOMAIN)} \
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}; \
 		app config -name {$(1)} build-config {$$($(1)_BCFG)}; \
 		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}'
 else
-$(O)/$(1)/src/lscript.ld: $(O)/$(2)/export/$(2)/sw/$$($(1)_SYSCONFIG)/$$($(1)_DOMAIN)/lscript.ld
+$(O)/$(1)/src/lscript.ld: $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a
 	$(XSCT) -eval 'setws {$(O)}; \
 		app create -name {$(1)} -platform {$(2)} \
-			-sysconfig {$$($(1)_SYSCONFIG)} \
 			-domain {$$($(1)_DOMAIN)} \
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}; \
@@ -258,17 +241,13 @@ endif
 ifneq ($$(strip $$($(1)_SED)),)
 	$$(foreach SED,$$($(1)_SED),$(call sed-src,$(1)/src,$$(SED))) :
 endif
-# App project fails if patches/sed scripts have been applied and no clean has
-# been performed
-	$(XSCT) -eval 'setws {$(O)}; \
-		app clean -name {$(1)}'
 
 __$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
 $(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(1)/src/lscript.ld $$(__$(1)_SRC)
 	$(XSCT) -eval 'setws {$(O)}; \
 		app build -name {$(1)}'
 
-GEN_APPS_DEP += $(O)/$(2)/export/$(2)/sw/$$($(1)_SYSCONFIG)/$(1)/lscript.ld
+GEN_APPS_DEP += $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a
 BLD_APPS_DEP += $(O)/$(1)/$$($(1)_BCFG)/$(1).elf
 
 # shortcut to create application, "make <app>"
@@ -289,10 +268,6 @@ endef
 $(eval $(call gen-plat-rule,$(PLAT_PRJ),$(HW_PLAT)))
 getdsa: $(PLAT_PRJ)
 .PHONY: gethwplat
-
-# generate make rules for system configurations, multiple
-$(foreach DOMAIN_PRJ,$(DOMAIN_PRJS),\
-	$(eval $(call gen-sysconfig-rule,$$($(DOMAIN_PRJ)_SYSCONFIG),$(PLAT_PRJ))))
 
 # generate make rules for domains, multiple
 $(foreach DOMAIN_PRJ,$(DOMAIN_PRJS),\
@@ -315,6 +290,6 @@ build: $(BLD_APPS_DEP) $(BLD_BOOTGEN_DEP)
 .PHONY: build
 
 # open workspace in GUI mode
-scout:
-	$(SCOUT) -workspace $(O)
-.PHONY: scout
+vitis:
+	$(VITIS) -workspace $(O)
+.PHONY: vitis

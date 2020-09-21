@@ -2,7 +2,7 @@
 #
 ################################################################################
 ##
-## Copyright 2019 Missing Link Electronics, Inc.
+## Copyright 2019-2020 Missing Link Electronics, Inc.
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -35,13 +35,12 @@
 
 # Defaults
 
-PLATS ?= zcu102_revmin
+#PLATS ?= zcu102_revmin
 
 ################################################################################
 # FSBL
 
 DOMAIN_PRJS += fsbl_bsp
-fsbl_bsp_SYSCONFIG = fsbl_bsp_syscfg
 fsbl_bsp_PROC = psu_cortexa53_0
 fsbl_bsp_IS_FSBL = yes
 fsbl_bsp_LIBS = xilffs xilsecure xilpm
@@ -56,7 +55,6 @@ fsbl_CPPSYMS = FSBL_DEBUG_DETAILED
 # Hello World
 
 DOMAIN_PRJS += gen_bsp
-gen_bsp_SYSCONFIG = gen_bsp_syscfg
 gen_bsp_PROC = psu_cortexa53_0
 gen_bsp_EXTRA_CFLAGS = -g -Wall -Wextra -Os
 gen_bsp_STDOUT = psu_uart_1
@@ -71,12 +69,11 @@ helloworld_SED = platform.c;baud_rate.sed
 ################################################################################
 # Linux Hello World
 
-APP_PRJS += lhelloworld
-lhelloworld_PLAT = zcu102_revmin
-lhelloworld_SYSCONFIG = xrt
-lhelloworld_DOMAIN = xrt
-lhelloworld_TMPL = Linux Hello World
-lhelloworld_BCFG = Debug
+#APP_PRJS += lhelloworld
+#lhelloworld_PLAT = zcu102_revmin
+#lhelloworld_DOMAIN = xrt
+#lhelloworld_TMPL = Linux Hello World
+#lhelloworld_BCFG = Debug
 
 ################################################################################
 # Boot image
@@ -101,7 +98,9 @@ generate_pem_BIF_ARGS_EXTRA = -p zu9eg -generate_keys pem
 generate_pem_BIF_ATTRS = pskfile sskfile fsbl
 generate_pem_pskfile_BIF_ATTR = pskfile
 generate_pem_pskfile_BIF_FILE = generate_pem/psk0.pem
+generate_pem_pskfile_BIF_FILE_NO_DEP = yes
 generate_pem_sskfile_BIF_ATTR = sskfile
 generate_pem_sskfile_BIF_FILE = generate_pem/ssk0.pem
+generate_pem_sskfile_BIF_FILE_NO_DEP = yes
 generate_pem_fsbl_BIF_ATTR = bootloader, destination_cpu=a53-0
 generate_pem_fsbl_BIF_FILE = fsbl/$(fsbl_BCFG)/fsbl.elf
