@@ -91,7 +91,9 @@ generate_pem_BIF_ARGS_EXTRA = -p zu9eg -generate_keys pem
 generate_pem_BIF_ATTRS = pskfile sskfile fsbl
 generate_pem_pskfile_BIF_ATTR = pskfile
 generate_pem_pskfile_BIF_FILE = generate_pem/psk0.pem
+generate_pem_pskfile_BIF_FILE_NO_DEP = yes
 generate_pem_sskfile_BIF_ATTR = sskfile
 generate_pem_sskfile_BIF_FILE = generate_pem/ssk0.pem
+generate_pem_sskfile_BIF_FILE_NO_DEP = yes
 generate_pem_fsbl_BIF_ATTR = bootloader, destination_cpu=a53-0
 generate_pem_fsbl_BIF_FILE = fsbl/$(fsbl_BCFG)/fsbl.elf
