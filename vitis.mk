@@ -213,7 +213,7 @@ $(O)/$(1)/src/lscript.ld:
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}'
 else
 ifneq ($$($(1)_PLAT),)
-$(O)/$(1)/src/lscript.ld: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
+$(O)/$(1)/src/lscript.ld:
 	$(XSCT) -eval 'setws {$(O)}; \
 		app create -name {$(1)} -platform {$$($(1)_PLAT)} \
 			-domain {$$($(1)_DOMAIN)} \
@@ -222,7 +222,7 @@ $(O)/$(1)/src/lscript.ld: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
 		app config -name {$(1)} build-config {$$($(1)_BCFG)}; \
 		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}'
 else
-$(O)/$(1)/src/lscript.ld: $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a
+$(O)/$(1)/src/lscript.ld:
 	$(XSCT) -eval 'setws {$(O)}; \
 		app create -name {$(1)} -platform {$(2)} \
 			-domain {$$($(1)_DOMAIN)} \
@@ -243,7 +243,9 @@ ifneq ($$(strip $$($(1)_SED)),)
 endif
 
 __$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
-$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(1)/src/lscript.ld $$(__$(1)_SRC)
+$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a \
+		$(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp $(O)/$(1)/src/lscript.ld \
+		$$(__$(1)_SRC)
 	$(XSCT) -eval 'setws {$(O)}; \
 		app build -name {$(1)}'
 
