@@ -196,6 +196,13 @@ endef
 # Applications
 
 # arg1: app name
+# arg2: src file/folder name, scheme <srcfile>
+# Paths are normalized because Vitis does not accept relative paths
+define import-src
+importsources -name $(1) -path [file normalize $(2)] -soft-link;
+endef
+
+# arg1: app name
 # arg2: platform name
 define gen-app-rule
 $(1)_PROC ?= $(DEF_APP_PROC)
@@ -241,7 +248,8 @@ $(O)/$(1)/src/lscript.ld:
 endif
 endif
 ifneq ($$(strip $$($(1)_SRC)),)
-	$$(foreach SRC,$$($(1)_SRC),$(call symlink-src,$(1),$$(SRC))) :
+	$(XSCT) -eval 'setws {$(O)}; \
+		$$(foreach SRC,$$($(1)_SRC),$(call import-src,$(1),$$(SRC)))'
 endif
 ifneq ($$(strip $$($(1)_PATCH)),)
 	$$(foreach PATCH,$$($(1)_PATCH),$(call patch-src,$(1)/src,$$(PATCH))) :
@@ -250,10 +258,9 @@ ifneq ($$(strip $$($(1)_SED)),)
 	$$(foreach SED,$$($(1)_SED),$(call sed-src,$(1)/src,$$(SED))) :
 endif
 
-__$(1)_SRC = $(addprefix $(O)/$(1)/src/,$$($(1)_SRC))
 $(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a \
 		$(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp $(O)/$(1)/src/lscript.ld \
-		$$(__$(1)_SRC)
+		$$($(1)_SRC)
 	$(XSCT) -eval 'setws {$(O)}; \
 		app build -name {$(1)}'
 

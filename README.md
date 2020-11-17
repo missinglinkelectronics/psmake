@@ -771,9 +771,9 @@ base the application on a hardware platform file instead of the `plat`
 platform.  Mutually exclusive with `PLAT`.
 
 `SRC`
-: List of space-separated source files to be added to the application. For each
-list entry, a symlink in the `src` directory of the respective application
-project will be created that points towards the corresponding source file.
+: List of space-separated source files or directories to be added to the
+application. For each list entry, a link entry in the application project to
+the absolute path of the respective source file or directory is created.
 
 `PATCH`
 : List of space-separated patch file entries. Patches are applied in the base

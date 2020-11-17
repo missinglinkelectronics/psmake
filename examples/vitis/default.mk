@@ -61,6 +61,12 @@ helloworld_BCFG = Debug
 helloworld_PATCH = helloworld.patch
 helloworld_SED = platform.c;baud_rate.sed
 
+APP_PRJS += example_app
+example_app_TMPL = Empty Application
+example_app_DOMAIN = gen_bsp
+example_app_BCFG = Debug
+example_app_SRC = example_app
+
 ################################################################################
 # Boot image
 
