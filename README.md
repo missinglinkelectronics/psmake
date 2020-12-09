@@ -652,15 +652,13 @@ required to write, debug and deploy applications for that hardware. In the
 Vitis Makefile, there is exactly one platform called `plat` by default [^1].
 The platform is either derived from
 
-- a Device Support Archive (DSA) or Hardware Description File (HDF) [^2].
+- a hardware description file (XSA)
 - an existing platform via the corresponding XPFM file.
 
 See section "Usage" on how to import one of these artifacts during build.
 
 [^1]: The platform name can be changed with the `PLAT_PRJ` variable if
       necessary.
-[^2]: We will subsume these different file formats under the term Hardware
-      Platform hereafter.
 
 
 #### Domains (BSP)
@@ -759,9 +757,9 @@ platform repository; see section "Repositories". Mutually exclusive with `HW`
 option.
 
 `HW`
-: Path to hardware platform file (DSA, HDF or XPFM). Use this to base the
-application on a hardware platform file instead of the `plat` platform.
-Mutually exclusive with `PLAT`.
+: Path to hardware definition file (XSA) or platform file (XPFM). Use this to
+base the application on a hardware platform file instead of the `plat`
+platform.  Mutually exclusive with `PLAT`.
 
 `SRC`
 : List of space-separated source files to be added to the application. For each
@@ -903,13 +901,13 @@ Instead of writing the build configuration from scratch, you can also copy
 
 ### Usage
 
-Import either a Hardware Platform file by executing
+Import either a hardware description file (XSA) by executing
 
-    $ make HW_PLAT=<path-to-your-hw-platform>
+    $ make HDF=<path-to-.xsa-file>
 
 or an existing platform via an XPFM file:
 
-    $ make XPFM=<path-to-xpfm>
+    $ make XPFM=<path-to-.xpfm-file>
 
 Without specyfing a further target, all projects will be built.
 
@@ -938,9 +936,9 @@ execute:
 In addition, the following generic Makefile targets are available:
 
 `plat`
-: Build the platform project. Either provide a path to a hardware platform file
-(DSA or HDF) via the `HW_PLAT` variable, or to an existing platform XPFM file
-via the `XPFM` variable.
+: Build the platform project. Either provide a path to a hardware description
+file (XSA) via the `HDF` variable, or to an existing platform file (XPFM) via
+the `XPFM` variable.
 
 `plat_distclean`
 : Clean the platform project.

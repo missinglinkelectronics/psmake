@@ -48,7 +48,7 @@ include $(MAKEFILE_PATH)common.mk
 # Variables
 
 # platform project paths
-HW_PLAT ?=
+HDF ?=
 XPFM ?=
 
 # user arguments, defaults, usually set via config.mk
@@ -94,7 +94,7 @@ endif
 # arg2: path to platform file
 define gen-plat-rule
 $(O)/$(1)/hw/$(1).stamp: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
-ifneq ($(HW_PLAT),)
+ifneq ($(HDF),)
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform create -name {$(1)} -hw {$(2)}'
 else
@@ -103,7 +103,7 @@ ifneq ($(XPFM),)
 		platform create -name {$(1)} -xpfm {$(XPFM)}'
 	touch $(O)/$(1)/xpfm.stamp
 else
-	@echo "error: missing HW_PLAT or XPFM, run either with HW_PLAT=<path-to-hw-platform> or XPFM=<path-to-xpfm>" >&2
+	@echo "error: missing HDF or XPFM, run either with HDF=<path-to-.xsa-file> or XPFM=<path-to-.xpfm-file>" >&2
 	@false
 endif
 endif
@@ -267,7 +267,7 @@ endef
 # Targets
 
 # generate make rules for platform project, single
-$(eval $(call gen-plat-rule,$(PLAT_PRJ),$(HW_PLAT)))
+$(eval $(call gen-plat-rule,$(PLAT_PRJ),$(HDF)))
 getdsa: $(PLAT_PRJ)
 .PHONY: gethwplat
 
