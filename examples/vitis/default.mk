@@ -33,11 +33,6 @@
 ##
 ################################################################################
 
-# Defaults
-
-#PLATS ?= zcu102_revmin
-
-################################################################################
 # FSBL
 
 DOMAIN_PRJS += fsbl_bsp
@@ -65,15 +60,6 @@ helloworld_DOMAIN = gen_bsp
 helloworld_BCFG = Debug
 helloworld_PATCH = helloworld.patch
 helloworld_SED = platform.c;baud_rate.sed
-
-################################################################################
-# Linux Hello World
-
-#APP_PRJS += lhelloworld
-#lhelloworld_PLAT = zcu102_revmin
-#lhelloworld_DOMAIN = xrt
-#lhelloworld_TMPL = Linux Hello World
-#lhelloworld_BCFG = Debug
 
 ################################################################################
 # Boot image
