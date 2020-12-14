@@ -629,6 +629,12 @@ supported yet. The Makefile should run on all underlying Linux OSs supported by
 Vitis, but not Windows. However, testing is only conducted on Ubuntu 18.04 LTS
 (Bionic Beaver) as of now.
 
+### Known Issues
+
+- Due to a bug in the Vitis Tcl API, when building an application the
+  corresponding domain is always rebuild as well. It is therefore recommended
+  to build applications in the Vitis GUI once the workspace has been created.
+
 
 ### Build Configuration Syntax
 
