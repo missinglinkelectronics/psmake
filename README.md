@@ -56,7 +56,7 @@ testing is only conducted on Ubuntu 18.04 LTS (Bionic Beaver) as of now.
 In your PetaLinux project directory, create a symlink named `Makefile` to the
 `petalinux.mk` file:
 
-    $ ln -s ../scripts/petalinux.mk Makefile
+    $ ln -s <path-to-your-psmake-repo>/petalinux.mk Makefile
 
 Then, execute:
 
@@ -536,7 +536,7 @@ Optionally, one can provide a default as well:
 
 Create a symlink named `Makefile` to the `xsdk.mk` file:
 
-    $ ln -s ../scripts/xsdk.mk Makefile
+    $ ln -s <path-to-your-psmake-repo>/xsdk.mk Makefile
 
 Add the `build` directory to your `.gitignore`.
 
@@ -892,7 +892,7 @@ Optionally, one can provide a default as well:
 
 Create a symlink named `Makefile` to the `vitis.mk` file:
 
-    $ ln -s ../scripts/vitis.mk Makefile
+    $ ln -s <path-to-your-psmake-repo>/vitis.mk Makefile
 
 Add the `build` directory to your `.gitignore`.
 
