@@ -23,7 +23,7 @@
 ##
 ################################################################################
 ##
-##  File Summary   : Example for Scout Makefile
+##  File Summary   : Example for Vitis Makefile
 ##
 ##                   Build with default fixed platform for ZC102:
 ##

@@ -23,7 +23,7 @@
 ##
 ################################################################################
 ##
-##  File Summary   : XSDK/Scout common functionality
+##  File Summary   : XSDK/Vitis common functionality
 ##
 ##                   Uses: bootgen cat git mkdir patch rm sed touch
 ##
