@@ -32,7 +32,16 @@
 
 connect -url $::env(HW_SERVER_URL)
 
-source $::env(PETALINUX)/tools/hsm/scripts/sdk/util/zynqmp_utils.tcl
+if {$::env(PETALINUX_VER) < 2018.3} {
+	set ZYNQMP_UTILS "tools/hsm/scripts/sdk/util/zynqmp_utils.tcl"
+} elseif {$::env(PETALINUX_VER) == 2018.3} {
+	set ZYNQMP_UTILS "tools/xsct/SDK/2018.3/scripts/sdk/util/zynqmp_utils.tcl"
+} elseif {$::env(PETALINUX_VER) == 2019.1} {
+	set ZYNQMP_UTILS "tools/xsct/scripts/sdk/util/zynqmp_utils.tcl"
+} else {
+	set ZYNQMP_UTILS "tools/xsct/scripts/vitis/util/zynqmp_utils.tcl"
+}
+source $::env(PETALINUX)/$ZYNQMP_UTILS
 targets -set -nocase -filter {name =~"APU*"} -index 1
 rst -system
 after 3000
