@@ -205,6 +205,10 @@ $(1)_LANG ?= $(DEF_APP_LANG)
 $(1)_BCFG ?= $(DEF_APP_BCFG)
 $(1)_OPT ?= $(DEF_APP_OPT)
 
+ifneq ($$strip($$($(1)_CPPSYMS)),)
+__$(1)_CPPSYMS_CCMD = $$(foreach SYM,$$($(1)_CPPSYMS), \
+	app config -name {$(1)} define-compiler-symbols {$$(SYM)};)
+endif
 ifneq ($$($(1)_HW),)
 $(O)/$(1)/src/lscript.ld:
 	$(XSCT) -eval 'setws {$(O)}; \
@@ -220,7 +224,9 @@ $(O)/$(1)/src/lscript.ld:
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}; \
 		app config -name {$(1)} build-config {$$($(1)_BCFG)}; \
-		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}'
+		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}; \
+		$$(__$(1)_CPPSYMS_CCMD) \
+		$$($(1)_POST_CREATE_TCL)'
 else
 $(O)/$(1)/src/lscript.ld:
 	$(XSCT) -eval 'setws {$(O)}; \
@@ -229,7 +235,9 @@ $(O)/$(1)/src/lscript.ld:
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}; \
 		app config -name {$(1)} build-config {$$($(1)_BCFG)}; \
-		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}'
+		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}; \
+		$$(__$(1)_CPPSYMS_CCMD) \
+		$$($(1)_POST_CREATE_TCL)'
 endif
 endif
 ifneq ($$(strip $$($(1)_SRC)),)
