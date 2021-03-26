@@ -188,3 +188,8 @@ sdklog:
 distclean:
 	rm -fr $(O)
 .PHONY: distclean
+
+# open XSCT in interactive mode
+xsct:
+	$(XSCT) -interactive -eval 'setws $(O)'
+.PHONY: xsct

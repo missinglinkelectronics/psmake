@@ -601,6 +601,9 @@ In addition, the following generic Makefile targets are available:
 `xsdk`
 : Run XSDK.
 
+`xsct`
+: Run XSCT.
+
 `clean`
 : Clean all projects.
 
@@ -963,6 +966,9 @@ the `XPFM` variable.
 
 `vitis`
 : Run Vitis.
+
+`xsct`
+: Run XSCT.
 
 `clean`
 : Clean all projects.
