@@ -49,6 +49,12 @@ else
 XSDB ?= xsdb
 endif
 
+ifeq ($(shell expr $(subst .,,$(PETALINUX_VER)) ">" 20183),1)
+SILENTCONFIG = --silentconfig
+else
+SILENTCONFIG = --oldconfig
+endif
+
 PLATFORM = $(shell cat project-spec/configs/config | \
 		grep -E '^CONFIG_SYSTEM_(MICROBLAZE|ZYNQ|ZYNQMP)=y$$' | \
 		sed -e 's/^CONFIG_SYSTEM_\(.*\)=y$$/\1/' | \
@@ -140,13 +146,13 @@ endif
 define set-update-mirror
 	sed -i 's/CONFIG_YOCTO_BB_NO_NETWORK=y/# CONFIG_YOCTO_BB_NO_NETWORK is not set/' $(PETALINUX_CONFIG)
 	printf 'BB_GENERATE_MIRROR_TARBALLS = "1"' >> $(LOCAL_CONF)
-	petalinux-config --oldconfig
+	petalinux-config $(SILENTCONFIG)
 endef
 
 define reset-update-mirror
 	sed -i 's/# CONFIG_YOCTO_BB_NO_NETWORK is not set/CONFIG_YOCTO_BB_NO_NETWORK=y/' $(PETALINUX_CONFIG)
 	sed -i '/BB_GENERATE_MIRROR_TARBALLS/d' $(LOCAL_CONF)
-	petalinux-config --oldconfig
+	petalinux-config $(SILENTCONFIG)
 endef
 
 # arg1: cmd
@@ -154,7 +160,7 @@ define trap-update-mirror
 sh -c "trap 'trap - SIGINT SIGTERM ERR; \
 	sed -i \"s/# CONFIG_YOCTO_BB_NO_NETWORK is not set/CONFIG_YOCTO_BB_NO_NETWORK=y/\" $(PETALINUX_CONFIG); \
 	sed -i \"/BB_GENERATE_MIRROR_TARBALLS/d\" $(LOCAL_CONF); \
-	petalinux-config --oldconfig; \
+	petalinux-config $(SILENTCONFIG); \
 	exit 1' SIGINT SIGTERM ERR; $(1)"
 endef
 
@@ -169,7 +175,7 @@ FORCE:
 $(PRJ_HDF): $(HDF) $(subst gethdf,FORCE,$(findstring gethdf,$(MAKECMDGOALS)))
 	mkdir -p $(dir $(TMPHDF))
 	ln -sf $(realpath $(HDF)) $(TMPHDF)
-	petalinux-config $(GEN_ARGS) --get-hw-description $(dir $(TMPHDF)) --oldconfig
+	petalinux-config $(GEN_ARGS) --get-hw-description $(dir $(TMPHDF)) $(SILENTCONFIG)
 
 gethdf: $(PRJ_HDF)
 
