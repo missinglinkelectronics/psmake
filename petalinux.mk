@@ -73,6 +73,7 @@ PETALINUX_CONFIG = project-spec/configs/config
 LOCAL_CONF = build/conf/local.conf
 SOURCE_DOWNLOADS = build/downloads
 SOURCE_MIRROR = $(shell awk 'BEGIN { FS = "file://" } /PREMIRRORS =/ { gsub(/ \\n \\/, "", $$2); print $$2 }' build/conf/plnxtool.conf)
+MANIFEST_PATH = $(lastword $(wildcard build/tmp/deploy/licenses/petalinux-image-minimal-*))
 
 # location of imported .hdf/.xsa file
 ifeq ($(HDF),)
@@ -105,6 +106,8 @@ BOOT ?=
 BSP ?=
 BOOT_ARG_EXTRA ?=
 UPDATE_MIRROR ?= 0
+SOURCE_RELEASE ?= source-release
+MANIFESTS ?= manifests
 
 ifneq ($(HDF),)
 TMPHDF ?= build/psmake/tmphdf/$(notdir $(HDF))/$(notdir $(HDF))
@@ -170,6 +173,28 @@ sh -c "trap 'trap - SIGINT SIGTERM ERR; \
 endef
 
 
+define set-source-release
+	printf 'INHERIT += "archiver"\n' >> $(LOCAL_CONF)
+	printf 'ARCHIVER_MODE[src] = "original"\n' >> $(LOCAL_CONF)
+	petalinux-config $(SILENTCONFIG)
+endef
+
+define reset-source-release
+	sed -i '/INHERIT += "archiver"/d' $(LOCAL_CONF)
+	sed -i '/ARCHIVER_MODE\[src\] = "original"/d' $(LOCAL_CONF)
+	petalinux-config $(SILENTCONFIG)
+endef
+
+# arg1: cmd
+define trap-source-release
+sh -c "trap 'trap - SIGINT SIGTERM ERR; \
+	sed -i \"/INHERIT += \\\"archiver\\\"/d\" $(LOCAL_CONF); \
+	sed -i \"/ARCHIVER_MODE\\\[src\\\] = \\\"original\\\"/d\" $(LOCAL_CONF); \
+	petalinux-config $(SILENTCONFIG); \
+	exit 1' SIGINT SIGTERM ERR; $(1)"
+endef
+
+
 ###############################################################################
 
 
@@ -210,6 +235,10 @@ else
 	__BLD_ARGS="$(GEN_ARGS) -s" $(MAKE) __build
 endif
 
+source-release: $(PRJ_HDF)
+	$(call trap-source-release,__BLD_ARGS=\"$(GEN_ARGS)\" $(MAKE) __source-release)
+	__BLD_ARGS="$(GEN_ARGS)" $(MAKE) __source-release
+
 __build:
 ifeq ($(UPDATE_MIRROR),1)
 	$(call set-update-mirror)
@@ -225,7 +254,16 @@ ifeq ($(UPDATE_MIRROR),1)
 	$(call reset-update-mirror)
 endif
 
-.PHONY: config config-kernel config-rootfs build sdk
+__source-release:
+	$(call set-source-release)
+	__BLD_ARGS="$(GEN_ARGS)" $(MAKE) __build
+	$(MAKEFILE_PATH)/source-release.sh $(SOURCE_RELEASE)
+	mkdir -p $(MANIFESTS)
+	find $(MANIFEST_PATH) -name '*.manifest' -exec cp {} $(MANIFESTS) \;
+	$(call reset-source-release)
+
+
+.PHONY: config config-kernel config-rootfs build sdk source-release
 
 
 package-boot: $(PRJ_HDF)

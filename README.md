@@ -154,7 +154,7 @@ HDF is deleted as well (i.e. all files in folder `project-spec/hw-description`
 except file `metadata`).
 
 
-## Networkless Builds
+### Networkless Builds
 
 In some circumstances, it might be desirable to perform builds without any
 network access; notably,
@@ -163,7 +163,7 @@ network access; notably,
 - to perform builds in corporate environments with restricted internet access.
 
 
-### Setup
+#### Setup
 
 A number of PetaLinux configuration options have to be changed to enable
 networkless builds; run `make config` and,
@@ -178,7 +178,7 @@ networkless builds; run `make config` and,
   (or set `CONFIG_YOCTO_BB_NO_NETWORK` in `project-spec/configs/config`).
 
 
-### Usage
+#### Usage
 
 All sources that are not part of the PetaLinux installation will be stored in
 the local source mirror. To update the source mirror, run:
@@ -236,6 +236,36 @@ identifying the image as `mle-example` and reading the semantic version from
         d.setVar("PATCH_VERSION", patch)
         d.setVar("IMAGE_VERSION", "{}.{}.{}".format(major, minor, patch))
     }
+
+
+### Open Source License Compliance
+
+There are three main areas of concern for [open source license
+compliance](http://docs.yoctoproject.org/dev-manual/common-tasks.html#maintaining-open-source-license-compliance-during-your-product-s-lifecycle).
+
+1. Source code must be provided.
+
+2. License text for the software must be provided.
+
+3. Compilation scripts and modifications to the source code must be provided.
+
+The first two points can be adressed by running:
+
+    $ make source-release SOURCE_RELEASE=<source-release-dir> MANIFESTS=<manifests-dir>
+
+This will create tarballs for packages that require the release of source code
+(i.e. GPL) in the directory `SOURCE_RELEASE` (defaulting to `source-release`).
+
+In addition, a license manifest is stored in directory `MANIFESTS` (defaulting
+to `manifests`) to assist with audits.
+
+Some licenses require the license text to accompany the binary. You can achieve
+this by adding the following to your
+`project-spec/meta-user/conf/petalinuxbsp.conf` file:
+
+    COPY_LIC_MANIFEST = "1"
+    COPY_LIC_DIRS = "1"
+    LICENSE_CREATE_PACKAGE = "1"
 
 
 ### Extending
