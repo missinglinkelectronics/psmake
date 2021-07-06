@@ -192,6 +192,52 @@ share a mirror. Cleanup of the source mirror should be performed manually when
 required.
 
 
+### Image Buildinfo
+
+Add the following snippet to `project-spec/meta-user/conf/petalinuxbsp.conf` in
+order to write build information to the target filesystem on `/etc/build`:
+
+    INHERIT += "image-buildinfo"
+    IMAGE_BUILDINFO_VARS_append = " DATETIME TOPDIR"
+
+`/etc/build` contains the build configuration as defined by the list of BitBake
+variables in `IMAGE_BUILINFO_VARS` and the Git revisions (branch/tag, commit ID
+and dirty flag) of all Yocto layers.
+
+Appending variables to `IMAGE_BUILDINFO_VARS` is optional; however the build
+time `DATETIME` and the build directory `TOPDIR` are recommended. A list of
+common variables can be found in the [Variables Glossary of the Yocto Reference
+Manual](https://docs.yoctoproject.org/ref-manual/variables.html).
+
+
+### Image Version
+
+It is recommended to add image versioning information via
+[os-release](https://www.freedesktop.org/software/systemd/man/os-release.html)
+using the `IMAGE_ID` and `IMAGE_VERSION` variables.
+
+Add the `os-release` package to your root filesystem and extend it via
+`project-spec/meta-user/recipes-core/os-release/os-release.bbappend`. The
+following example will add the variables `BUILD_ID` (build timestamp),
+`IMAGE_ID` and `IMAGE_VERSION` to `/etc/os-release` on the target filesystem,
+identifying the image as `mle-example` and reading the semantic version from
+`version.txt` in the PetaLinux root directory.
+
+    OS_RELEASE_FIELDS += "BUILD_ID IMAGE_ID IMAGE_VERSION"
+
+    IMAGE_ID = "mle-example"
+
+    python do_compile_prepend () {
+        with open(d.getVar("TOPDIR") + "/../version.txt") as f:
+            major, minor, patch = f.readline().rstrip().split(".")
+
+        d.setVar("MAJOR_VERSION", major)
+        d.setVar("MINOR_VERSION", minor)
+        d.setVar("PATCH_VERSION", patch)
+        d.setVar("IMAGE_VERSION", "{}.{}.{}".format(major, minor, patch))
+    }
+
+
 ### Extending
 
 If you need additional functionality in your project, put it into a file named
