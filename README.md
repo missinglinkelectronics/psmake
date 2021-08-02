@@ -198,15 +198,15 @@ Add the following snippet to `project-spec/meta-user/conf/petalinuxbsp.conf` in
 order to write build information to the target filesystem on `/etc/build`:
 
     INHERIT += "image-buildinfo"
-    IMAGE_BUILDINFO_VARS_append = " DATETIME TOPDIR"
+    IMAGE_BUILDINFO_VARS_append = " DATETIME"
 
 `/etc/build` contains the build configuration as defined by the list of BitBake
 variables in `IMAGE_BUILINFO_VARS` and the Git revisions (branch/tag, commit ID
 and dirty flag) of all Yocto layers.
 
 Appending variables to `IMAGE_BUILDINFO_VARS` is optional; however the build
-time `DATETIME` and the build directory `TOPDIR` are recommended. A list of
-common variables can be found in the [Variables Glossary of the Yocto Reference
+time `DATETIME` is recommended. A list of common variables can be found in the
+[Variables Glossary of the Yocto Reference
 Manual](https://docs.yoctoproject.org/ref-manual/variables.html).
 
 
