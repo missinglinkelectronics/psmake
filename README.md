@@ -114,11 +114,13 @@ variable.
 
 `boot-jtag-u-boot`
 : Boot board into U-Boot via JTAG. The hardware server URL must be provided via
-the `HW_SERVER_URL` variable.
+the `HW_SERVER_URL` variable. Optionally the variables `HW_SERVER_BEFORE_CONNECT`
+and `HW_SERVER_AFTER_CONNECT` can be used to execute xsdb commands before and after connecting.
 
 `boot-jtag-kernel`
 : Boot board and upload Linux kernel via JTAG. The hardware server URL must be
-provided via the `HW_SERVER_URL` variable.
+provided via the `HW_SERVER_URL` variable. Optionally the variables `HW_SERVER_BEFORE_CONNECT`
+and `HW_SERVER_AFTER_CONNECT` can be used to execute xsdb commands before and after connecting.
 
 `boot-jtag-psinit-uboot`
 : Boot board into U-Boot via JTAG, but run `ps*_init.tcl` script instead of
