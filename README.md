@@ -980,6 +980,9 @@ Optionally, one can provide a default as well:
 
     BIT ?= hw/design_1_wrapper.bit
 
+Alternatively, _BIF_FILE can be omitted or left empty for bitstreams. The
+bitstream will be extracted from the .xsa specified by the `HDF` variable
+instead.
 
 ### Setup
 

@@ -107,6 +107,19 @@ BOOTGEN ?= bootgen
 
 BOOTGEN_PRJS ?=
 
+# arg1: Bootgen project
+# arg2: BIF attribute
+define gen-extract-bitfile
+ifneq (,$$(findstring destination_device=pl,$$($(1)_$(2)_BIF_ATTR)))
+$(1)_$(2)_BIF_FILE ?=
+ifeq ($$($(1)_$(2)_BIF_FILE),)
+$(1)_$(2)_BIF_FILE = $$(notdir $$(HDF:.xsa=.bit))
+$(O)/$(notdir $(HDF:.xsa=.bit)):
+	unzip -j $$(HDF) $$(notdir $$@) -d $$(dir $$@)
+endif
+endif
+endef
+
 # arg1: BIF file name
 # arg2: BIF attribute
 define gen-bif-attr
@@ -126,6 +139,10 @@ $(1)_FLASH_FSBL ?=
 $(1)_FLASH_OFF ?= 0
 $(1)_BOOTGEN_DEP = $$(foreach BIF_ATTR,$$($(1)_BIF_ATTRS),\
 	$(call gen-bootgen-dep,$(1),$$(BIF_ATTR)))
+
+# generate make rules for bitstream extractions, multiple
+$(foreach BIF_ATTR,$($(1)_BIF_ATTRS),\
+	$(eval $(call gen-extract-bitfile,$(1),$(BIF_ATTR))))
 
 $(O)/$(1)/$(1).bif: $(O)/.metadata/repos.stamp $$($(1)_BOOTGEN_DEP)
 	mkdir -p $(O)/$(1)
