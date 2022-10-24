@@ -127,7 +127,7 @@ $(1)_FLASH_OFF ?= 0
 $(1)_BOOTGEN_DEP = $$(foreach BIF_ATTR,$$($(1)_BIF_ATTRS),\
 	$(call gen-bootgen-dep,$(1),$$(BIF_ATTR)))
 
-$(O)/$(1)/$(1).bif: $$($(1)_BOOTGEN_DEP)
+$(O)/$(1)/$(1).bif: $(O)/.metadata/repos.stamp $$($(1)_BOOTGEN_DEP)
 	mkdir -p $(O)/$(1)
 	printf '$(1):\n{\n' > $(O)/$(1)/$(1).bif
 ifneq ($$(strip $$($(1)_BIF_ATTRS)),)
