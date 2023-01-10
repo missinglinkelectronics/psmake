@@ -310,3 +310,7 @@ build: $(BLD_APPS_DEP) $(BLD_BOOTGEN_DEP)
 vitis:
 	$(VITIS) -workspace $(O)
 .PHONY: vitis
+
+# do not execute any targets in parallel even if make is called with -j > 1 to 
+# avoid Vitis workshop corruption
+.NOTPARALLEL:
