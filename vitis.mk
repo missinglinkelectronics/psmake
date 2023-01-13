@@ -55,11 +55,12 @@ XPFM ?=
 DEF_DOMAIN_PROC ?= psu_cortexa53_0
 DEF_DOMAIN_OS ?= standalone
 DEF_APP_PROC ?= psu_cortexa53_0
-DEF_APP_TMPL ?= Empty Application
+DEF_APP_TMPL ?= Empty Application(C)
 DEF_APP_OS ?= standalone
 DEF_APP_LANG ?= C
 DEF_APP_BCFG ?= Release
 DEF_APP_OPT ?= Optimize more (-O2)
+DEF_APP_EXTRA_CFLAGS ?=
 
 DOMAIN_PRJS ?=
 APP_PRJS ?=
@@ -211,6 +212,7 @@ $(1)_OS ?= $(DEF_APP_OS)
 $(1)_LANG ?= $(DEF_APP_LANG)
 $(1)_BCFG ?= $(DEF_APP_BCFG)
 $(1)_OPT ?= $(DEF_APP_OPT)
+$(1)_EXTRA_CFLAGS ?= $(DEF_APP_EXTRA_CFLAGS)
 
 ifneq ($$strip($$($(1)_CPPSYMS)),)
 __$(1)_CPPSYMS_CCMD = $$(foreach SYM,$$($(1)_CPPSYMS), \
@@ -232,6 +234,7 @@ $(O)/$(1)/src/lscript.ld:
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}; \
 		app config -name {$(1)} build-config {$$($(1)_BCFG)}; \
 		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}; \
+		app config -name {$(1)} -add compiler-misc {$$($(1)_EXTRA_CFLAGS)}; \
 		$$(__$(1)_CPPSYMS_CCMD) \
 		$$($(1)_POST_CREATE_TCL)'
 else
@@ -243,6 +246,7 @@ $(O)/$(1)/src/lscript.ld:
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}; \
 		app config -name {$(1)} build-config {$$($(1)_BCFG)}; \
 		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}; \
+		app config -name {$(1)} -add compiler-misc {$$($(1)_EXTRA_CFLAGS)}; \
 		$$(__$(1)_CPPSYMS_CCMD) \
 		$$($(1)_POST_CREATE_TCL)'
 endif

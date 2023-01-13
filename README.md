@@ -821,12 +821,16 @@ their name:
     helloworld_BCFG = Debug
     helloworld_PATCH = helloworld.patch
     helloworld_SED = platform.c;baud_rate.sed
+    helloworld_EXTRA_CFLAGS = -Wall -Wextra
+    helloworld_OPT = Optimize for size (-Os)
 
 The following application project options are available:
 
 `TMPL`
 : Name of the template to base the application project on. Run `repo -apps` in
-XSCT to get a list of available application templates.
+XSCT to get a list of available application templates. For C++,
+`Empty Application (C++)` will not get listed (note the extra space, compared
+to `Empty Application(C)`).
 
 `PROC`
 : Processor instance. Run `toolchain` in XSCT to get a list of supported
@@ -879,6 +883,13 @@ project. A sed list entry has the format `<srcfile>;<sedfile>`, where
 : Hook for adding extra Tcl commands after the application project has been
 created. Can be used to set application project configuration parameters (via
 the `configapp` command) not available in the Vitis Makefile.
+
+`EXTRA_CFLAGS`
+: Adds additional compiler flags to those added by the template. This variable
+is used for the C, as well as the C++ compiler.
+
+`LANG`
+: Programming language. Can be either `C` (default) or `C++`.
 
 
 #### Bootgen

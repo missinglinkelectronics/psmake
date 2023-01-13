@@ -60,12 +60,21 @@ helloworld_DOMAIN = gen_bsp
 helloworld_BCFG = Debug
 helloworld_PATCH = helloworld.patch
 helloworld_SED = platform.c;baud_rate.sed
+helloworld_EXTRA_CFLAGS = -Wall -Wextra
+helloworld_OPT = Optimize for size (-Os)
 
 APP_PRJS += example_app
-example_app_TMPL = Empty Application
+example_app_TMPL = Empty Application(C)
 example_app_DOMAIN = gen_bsp
 example_app_BCFG = Debug
 example_app_SRC = example_app
+
+APP_PRJS += example_app_cpp
+example_app_cpp_TMPL = Empty Application (C++)
+example_app_cpp_DOMAIN = gen_bsp
+example_app_cpp_BCFG = Debug
+example_app_cpp_LANG = C++
+example_app_cpp_SRC = example_app_cpp
 
 ################################################################################
 # Boot image
