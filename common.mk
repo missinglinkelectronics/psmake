@@ -107,6 +107,11 @@ BOOTGEN ?= bootgen
 
 BOOTGEN_PRJS ?=
 
+# arg1: BIF file
+define sanitize-rel-abs-path
+$$(if $$(findstring yes,$$(if $$(patsubst /%,,$(1)),,yes)),$(1),$(O)/$(1))
+endef
+
 # arg1: Bootgen project
 # arg2: BIF attribute
 define gen-extract-bitfile
@@ -123,14 +128,14 @@ endef
 # arg1: BIF file name
 # arg2: BIF attribute
 define gen-bif-attr
-\t[$$($(1)_$(2)_BIF_ATTR)] $$($(1)_$(2)_BIF_FILE)\n
+\t[$$($(1)_$(2)_BIF_ATTR)] $(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE))\n
 endef
 
 # arg1: Bootgen project
 # arg2: BIF attribute
 define gen-bootgen-dep
 $$(if $$(findstring yes,$$($(1)_$(2)_BIF_FILE_NO_DEP)),,\
-	$(O)/$$($(1)_$(2)_BIF_FILE))
+	$(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE)))
 endef
 
 define gen-bif-rule
@@ -156,10 +161,10 @@ endif
 
 $(O)/$(1)/BOOT.BIN: $(O)/$(1)/$(1).bif
 ifeq ($$($(1)_BIF_NO_OUTPUT),yes)
-	cd $(O) && $(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
+	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
 		$$($(1)_BIF_ARGS_EXTRA)
 else
-	cd $(O) && $(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
+	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
 		-o $(1)/BOOT.BIN -w $$($(1)_BIF_ARGS_EXTRA)
 endif
 
@@ -169,7 +174,6 @@ BLD_BOOTGEN_DEP += $(O)/$(1)/BOOT.BIN
 # NOTE: Target $(1)_flash is written for QSPI flashing in mind - other types
 #       might need more or other arguments!
 $(1)_flash: $(O)/$(1)/BOOT.BIN
-	cd $(O) && \
 	program_flash \
 		-flash_type $$($(1)_FLASH_TYPE) \
 		-fsbl $$($(1)_FLASH_FSBL) \
