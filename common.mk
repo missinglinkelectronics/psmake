@@ -165,7 +165,7 @@ ifeq ($$($(1)_BIF_NO_OUTPUT),yes)
 		$$($(1)_BIF_ARGS_EXTRA)
 else
 	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $$< \
-		-o $$@ -w $$($(1)_BIF_ARGS_EXTRA)
+		-o $$@ -w on $$($(1)_BIF_ARGS_EXTRA)
 endif
 
 GEN_BOOTGEN_DEP += $(O)/$(1)/$(1).bif
