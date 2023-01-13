@@ -778,11 +778,14 @@ XSCT to get a list of all OSs.
 processor types.
 
 `IS_FSBL`
-: If `yes`, apply non-default BSP settings for FSBL.
+: If `yes`, apply non-default BSP settings for FSBL. Overrides EXTRA_CFLAGS
+with `-g -Wall -Wextra -Os -flto -ffat-lto-objects`.
 
 `EXTRA_CFLAGS`
-: Additional compiler flags (default `-g -Wall -Wextra`). The default
-optimization level of `-O2` can be overriden with this variable.
+: Additional compiler flags (default by Vitis `-g -Wall -Wextra -fno-tree-loop-distribute-patterns`).
+The default optimization level of `-O2` can be overriden with this variable.
+Note, setting this variable overrides the default value. Also, in case of
+IS_FSBL=yes this option will be ignored.
 
 `STDIN`
 : Select UART for standard input.
