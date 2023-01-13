@@ -150,22 +150,22 @@ $(foreach BIF_ATTR,$($(1)_BIF_ATTRS),\
 	$(eval $(call gen-extract-bitfile,$(1),$(BIF_ATTR))))
 
 $(O)/$(1)/$(1).bif: $(O)/.metadata/repos.stamp $$($(1)_BOOTGEN_DEP)
-	mkdir -p $(O)/$(1)
-	printf '$(1):\n{\n' > $(O)/$(1)/$(1).bif
+	mkdir -p $$(dir $$@)
+	printf '$(1):\n{\n' > $$@
 ifneq ($$(strip $$($(1)_BIF_ATTRS)),)
 	printf '$$(foreach BIF_ATTR,$$($(1)_BIF_ATTRS), \
 		$(call gen-bif-attr,$(1),$$(BIF_ATTR)))' \
-		>> $(O)/$(1)/$(1).bif
+		>> $$@
 endif
-	printf '}\n' >> $(O)/$(1)/$(1).bif
+	printf '}\n' >> $$@
 
 $(O)/$(1)/BOOT.BIN: $(O)/$(1)/$(1).bif
 ifeq ($$($(1)_BIF_NO_OUTPUT),yes)
-	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
+	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $$< \
 		$$($(1)_BIF_ARGS_EXTRA)
 else
-	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $(1)/$(1).bif \
-		-o $(1)/BOOT.BIN -w $$($(1)_BIF_ARGS_EXTRA)
+	$(BOOTGEN) -arch $$($(1)_BIF_ARCH) -image $$< \
+		-o $$@ -w $$($(1)_BIF_ARGS_EXTRA)
 endif
 
 GEN_BOOTGEN_DEP += $(O)/$(1)/$(1).bif
@@ -177,7 +177,7 @@ $(1)_flash: $(O)/$(1)/BOOT.BIN
 	program_flash \
 		-flash_type $$($(1)_FLASH_TYPE) \
 		-fsbl $$($(1)_FLASH_FSBL) \
-		-f $(1)/BOOT.BIN -offset $$($(1)_FLASH_OFF) \
+		-f $$< -offset $$($(1)_FLASH_OFF) \
 		-verify \
 		-cable type xilinx_tcf url $(HW_SERVER_URL)
 .PHONY: $(1)_flash
