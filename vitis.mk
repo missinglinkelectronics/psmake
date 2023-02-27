@@ -54,7 +54,6 @@ XPFM ?=
 # user arguments, defaults, usually set via config.mk
 DEF_DOMAIN_PROC ?= psu_cortexa53_0
 DEF_DOMAIN_OS ?= standalone
-DEF_APP_PROC ?= psu_cortexa53_0
 DEF_APP_TMPL ?= Empty Application(C)
 DEF_APP_OS ?= standalone
 DEF_APP_LANG ?= C
@@ -206,7 +205,7 @@ endef
 # arg1: app name
 # arg2: platform name
 define gen-app-rule
-$(1)_PROC ?= $(DEF_APP_PROC)
+$(1)_PROC ?= $($($(1)_DOMAIN)_PROC)
 $(1)_TMPL ?= $(DEF_APP_TMPL)
 $(1)_OS ?= $(DEF_APP_OS)
 $(1)_LANG ?= $(DEF_APP_LANG)
