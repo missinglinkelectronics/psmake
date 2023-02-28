@@ -982,7 +982,9 @@ Optionally, one can provide a default as well:
 
 Alternatively, _BIF_FILE can be omitted or left empty for bitstreams. The
 bitstream will be extracted from the .xsa specified by the `HDF` variable
-instead.
+instead. This will only work, if the bit-file within the xsa-file has the
+same name (apart from its extension). Otherwise extraction will fail and thus
+require the user to manually specify the bit-file.
 
 ### Setup
 
