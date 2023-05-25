@@ -777,11 +777,13 @@ XSCT to get a list of all OSs.
 
 `PROC`
 : Processor instance. Run `toolchain` in XSCT to get a list of supported
-processor types.
+processor types (usually either psu_cortexa53_{0..3},  ps7_cortexa9_{0,1} or
+psu_cortexr5_{0,1}).
 
 `IS_FSBL`
 : If `yes`, apply non-default BSP settings for FSBL. Overrides EXTRA_CFLAGS
-with `-g -Wall -Wextra -Os -flto -ffat-lto-objects`.
+with `-g -Wall -Wextra -Os -flto -ffat-lto-objects` for ZynqMP (A53) and
+`-g -Wall -Wextra -Os -flto -ffat-lto-objects -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles` for Zynq (A9).
 
 `EXTRA_CFLAGS`
 : Additional compiler flags (default by Vitis `-g -Wall -Wextra -fno-tree-loop-distribute-patterns`).

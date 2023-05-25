@@ -128,7 +128,9 @@ endef
 # arg1: BIF file name
 # arg2: BIF attribute
 define gen-bif-attr
-\t[$$($(1)_$(2)_BIF_ATTR)] $(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE))\n
+$$(if $$($(1)_$(2)_BIF_ATTR),\
+	\t[$$($(1)_$(2)_BIF_ATTR)] $(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE))\n,\
+	\t$(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE))\n)
 endef
 
 # arg1: Bootgen project

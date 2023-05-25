@@ -152,11 +152,44 @@ __$(1)_EXTRA_CCMD += \
 endif
 ifeq ($$($(1)_IS_FSBL),yes)
 # non-default BSP settings for FSBL
+ifeq ($(findstring psu_cortexa53,$($(1)_PROC)),psu_cortexa53)
+# for A53, ZynqMP
 __$(1)_EXTRA_CCMD += \
 	bsp config {zynqmp_fsbl_bsp} {true}; \
 	bsp config {read_only} {true}; \
 	bsp config {use_mkfs} {false}; \
 	bsp config {extra_compiler_flags} {-g -Wall -Wextra -Os -flto -ffat-lto-objects};
+else ifeq ($(findstring ps7_cortexa9,$($(1)_PROC)),ps7_cortexa9)
+# for A9, Zynq
+__$(1)_EXTRA_CCMD += \
+	bsp config {zynqmp_fsbl_bsp} {false}; \
+	bsp config {read_only} {true}; \
+	bsp config {use_mkfs} {true}; \
+	bsp config {extra_compiler_flags} {-g -Wall -Wextra -Os -flto -ffat-lto-objects -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles};
+else ifeq ($(findstring psu_cortexr5,$($(1)_PROC)),psu_cortexr5)
+# for R5, ZynqMP
+__$(1)_EXTRA_CCMD += \
+	bsp config {zynqmp_fsbl_bsp} {true}; \
+	bsp config {read_only} {true}; \
+	bsp config {use_mkfs} {false}; \
+	bsp config {extra_compiler_flags} {-g -DARMR5 -Wall -Wextra -Os -flto -ffat-lto-objects -mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard};
+else
+# TODO Unknown or not yet supported architecture for FSBL (e.g. Versal)
+endif
+else
+ifeq ($(findstring ps7_cortexa9,$($(1)_PROC)),ps7_cortexa9)
+# for A9, Zynq
+__$(1)_EXTRA_CCMD += \
+	bsp config -append {extra_compiler_flags} {-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles};
+else ifeq ($(findstring psu_cortexr5,$($(1)_PROC)),psu_cortexr5)
+# for R5, ZynqMP
+__$(1)_EXTRA_CCMD += \
+	bsp config -append {extra_compiler_flags} {-mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard};
+else ifeq ($(findstring psv_cortexa72,$($(1)_PROC)),psv_cortexa72)
+# for A72, Versal
+__$(1)_EXTRA_CCMD += \
+	bsp config -append {extra_compiler_flags} {-Dversal -DARMA72_EL3};
+endif
 endif
 
 $(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile: $(O)/$(2)/hw/$(2).stamp
