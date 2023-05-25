@@ -596,14 +596,23 @@ Bootgen (e.g. key generation) or is not a file at all, one must set the
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one
 should point the corresponding `BIF_FILE` option to a variable named like
-`BIT` (`BIT` will be initialized to the name of the `.xsa` file and can
-be automatically extracted from it. If the name does not match, extraction will
-fail and thus require the user to manually specify the bit-file.):
+`BIT`. `BIT` will be initialized to the name of the `.xsa` file and can
+be automatically extracted from it.
 
     bootbin_bit_BIF_ATTR = destination_device=pl
     bootbin_bit_BIF_FILE = $(BIT)
 
-The `BIT` variable must then be provided on invocation:
+Caution: Based on Xilinx' recommendations (see Appendix), the order for
+`BIF_ATTRS` shall be `FSBL, PMU-FW, bitstream, EL3 monitor firmware, device tree
+u-boot, application(s), bin-partion(s)`. Especially the relative position of the
+FSBL and the usually rather large bit-file in the list is critical in order to
+avoid overwriting subsequent elements like the application in memory during
+boot.
+
+If the name of the bitstream inside the `.xsa` file and the name of the `.xsa`
+file itself do not match, extraction will fail and thus require the user to
+manually specify the bit-file. The `BIT` variable must then be provided on
+invocation:
 
     $ make HDF=<path-to-your-hdf> BIT=hw/<bitstream>.bit
 
@@ -981,14 +990,23 @@ Bootgen (e.g. key generation) or is not a file at all, one must set the
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one
 should point the corresponding `BIF_FILE` option to a variable named like
-`BIT` (`BIT` will be initialized to the name of the `.xsa` file and can
-be automatically extracted from it. If the name does not match, extraction will
-fail and thus require the user to manually specify the bit-file.):
+`BIT`. `BIT` will be initialized to the name of the `.xsa` file and can
+be automatically extracted from it.
 
     bootbin_bit_BIF_ATTR = destination_device=pl
     bootbin_bit_BIF_FILE = $(BIT)
 
-The `BIT` variable must then be provided on invocation:
+Caution: Based on Xilinx' recommendations (see Appendix), the order for
+`BIF_ATTRS` shall be `FSBL, PMU-FW, bitstream, EL3 monitor firmware, device tree
+u-boot, application(s), bin-partion(s)`. Especially the relative position of the
+FSBL and the usually rather large bit-file in the list is critical in order to
+avoid overwriting subsequent elements like the application in memory during
+boot.
+
+If the name of the bitstream inside the `.xsa` file and the name of the `.xsa`
+file itself do not match, extraction will fail and thus require the user to
+manually specify the bit-file. The `BIT` variable must then be provided on
+invocation:
 
     $ make HDF=<path-to-your-hdf> BIT=hw/<bitstream>.bit
 
@@ -1093,7 +1111,71 @@ the `XPFM` variable.
 The build configuration file can be extended with standard Makefile targets for
 e.g. uploading and running build artifacts via JTAG.
 
+## Appendix
 
-## License
+### BIF file structure
+
+Xilinx recommends the following BIF file structure in UG1283 "BIF Syntax
+and Supported File Types" (slightly adjusted to include optional PMU-FW,
+EL3 monitor firmware and device tree):
+
+```
+<bootimage_name>:
+{
+	/* common attributes */
+	[attribute1] <argument1>
+
+	/* bootloader */
+	[
+		attribute2,
+		attribute3,
+		attribute4=<argument>
+	] <elf>
+
+	/* optional pmu-fw image */
+	[
+		pmufw_image,
+		attribute3,
+		attribute4=<argument>
+	] <elf>
+
+	/* pl bitstream */
+	[
+		destination_device=pl,
+		attribute3,
+		attribute4=<argument>,
+		attibute=<argument>
+	] <bit>
+
+	/* optional EL3 monitor firmware */
+	[
+		destination_cpu=<cpu>,
+		exception_level=el-3,
+		trustzone,
+		attribute3,
+		attribute4=<argument>
+	] <elf>
+
+	/* optional device tree */
+	[
+		destination_cpu=<cpu>,
+		load=<address>,
+		attribute3,
+		attribute4=<argument>
+	] <dtb>
+
+	/* another elf partition, e.g. u-boot */
+	[
+		destination_cpu=<cpu>,
+		attribute3,
+		attribute4=<argument>
+	] <elf>
+
+	/* bin partition */
+	<bin>
+}
+```
+
+# License
 
 Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
