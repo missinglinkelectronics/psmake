@@ -906,6 +906,8 @@ is used for the C, as well as the C++ compiler.
 `LANG`
 : Programming language. Can be either `C` (default) or `C++`.
 
+`LIBS`
+: List of libraries to be added to the linking command (e.g. `m` for `-lm`).
 
 #### Bootgen
 

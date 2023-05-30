@@ -245,10 +245,15 @@ $(1)_LANG ?= $(DEF_APP_LANG)
 $(1)_BCFG ?= $(DEF_APP_BCFG)
 $(1)_OPT ?= $(DEF_APP_OPT)
 $(1)_EXTRA_CFLAGS ?= $(DEF_APP_EXTRA_CFLAGS)
+$(1)_LIBS ?=
 
 ifneq ($$strip($$($(1)_CPPSYMS)),)
 __$(1)_CPPSYMS_CCMD = $$(foreach SYM,$$($(1)_CPPSYMS), \
 	app config -name {$(1)} define-compiler-symbols {$$(SYM)};)
+endif
+ifneq ($$strip($$($(1)_LIBS)),)
+__$(1)_LIBS_CCMD = $$(foreach SYM,$$($(1)_LIBS), \
+	app config -name {$(1)} -add libraries {$$(SYM)};)
 endif
 ifneq ($$($(1)_HW),)
 $(O)/$(1)/src/lscript.ld:
@@ -268,6 +273,7 @@ $(O)/$(1)/src/lscript.ld: | $(O)/$$($(1)_PLAT)/hw/$$($(1)_PLAT).stamp $(O)/$$($(
 		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}; \
 		app config -name {$(1)} -add compiler-misc {$$($(1)_EXTRA_CFLAGS)}; \
 		$$(__$(1)_CPPSYMS_CCMD) \
+		$$(__$(1)_LIBS_CCMD) \
 		$$($(1)_POST_CREATE_TCL)'
 else
 $(O)/$(1)/src/lscript.ld: | $(O)/$(2)/hw/$(2).stamp $(O)/$(2)/$$($(1)_PROC)/$$($(1)_DOMAIN)/bsp/Makefile
@@ -280,6 +286,7 @@ $(O)/$(1)/src/lscript.ld: | $(O)/$(2)/hw/$(2).stamp $(O)/$(2)/$$($(1)_PROC)/$$($
 		app config -name {$(1)} compiler-optimization {$$($(1)_OPT)}; \
 		app config -name {$(1)} -add compiler-misc {$$($(1)_EXTRA_CFLAGS)}; \
 		$$(__$(1)_CPPSYMS_CCMD) \
+		$$(__$(1)_LIBS_CCMD) \
 		$$($(1)_POST_CREATE_TCL)'
 endif
 endif
