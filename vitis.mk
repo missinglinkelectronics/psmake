@@ -344,6 +344,136 @@ $(1)_distclean:
 endef
 
 ###############################################################################
+# JTAG boot
+
+# arg1: path to platform file
+# arg2: architecture
+define gen-boot-jtag-rule
+boot_jtag: $(O)/$(JTAG_PL_FILE) \
+		$(O)/$(JTAG_FSBL_PRJ)/$$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf \
+		$(O)/$(JTAG_APP_PRJ)/$$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf
+ifeq ($(findstring zynqmp,$(2)),zynqmp)
+	cd $(O) && \
+	$(XSCT) -eval 'connect -url $(HW_SERVER_URL); \
+		puts stderr "INFO: Resetting system..."; \
+		targets -set -nocase -filter {name =~ "*APU*"}; \
+		rst -srst; \
+		after 1000; \
+		puts stderr "INFO: Disabling JTAG security gates for DAP, PLTAP and PMU..."; \
+		targets -set -filter {name =~ "PSU"}; \
+		mwr 0xffca0038 0x1ff; \
+		after 500; \
+		if {[string trim "$(JTAG_PMU_PRJ)"] != ""} { \
+			puts stderr "INFO: Downloading the PMU firmware..."; \
+			targets -set -filter {name =~ "MicroBlaze PMU"}; \
+			dow $(JTAG_PMU_PRJ)/$($(JTAG_PMU_PRJ)_BCFG)/$(JTAG_PMU_PRJ).elf; \
+			con; \
+			after 500; \
+		}; \
+		puts stderr "INFO: Configuring the FPGA..."; \
+		fpga $(JTAG_PL_ARG) $(JTAG_PL_FILE); \
+		targets -set -nocase -filter {name =~ "*A53*#0"}; \
+		rst -processor -clear-registers; \
+		after 1000; \
+		source ./$(PLAT_PRJ)/hw/psu_init.tcl; psu_post_config; \
+		if { [string first "Stopped" [state]] != 0 } { \
+			stop; \
+		}; \
+		puts stderr "INFO: Downloading FSBL to the target."; \
+		dow $(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf; \
+		con; \
+		after 3000; stop; \
+		puts stderr "INFO: Downloading app to the target."; \
+		dow $(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf; \
+		puts stderr "INFO: Executing app."; \
+		con; \
+		exit;'
+else ifeq ($(findstring zynq,$(2)),zynq)
+	cd $(O) && \
+	$(XSCT) -eval 'connect -url $(HW_SERVER_URL); \
+		puts stderr "INFO: Resetting system..."; \
+		targets -set -nocase -filter {name =~ "*APU*"}; \
+		rst -srst; \
+		after 1000; \
+		puts stderr "INFO: Configuring the FPGA..."; \
+		fpga $(JTAG_PL_ARG) $(JTAG_PL_FILE); \
+		targets -set -nocase -filter {name =~ "arm*#0"}; \
+		rst -processor -clear-registers; \
+		after 1000; \
+		source ./$(PLAT_PRJ)/hw/ps7_init.tcl; ps7_post_config; \
+		if { [string first "Stopped" [state]] != 0 } { \
+			stop; \
+		}; \
+		puts stderr "INFO: Downloading FSBL to the target."; \
+		dow $(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf; \
+		con; \
+		after 3000; stop; \
+		puts stderr "INFO: Downloading app to the target."; \
+		dow $(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf; \
+		puts stderr "INFO: Executing app."; \
+		con; \
+		exit;'
+endif 
+.PHONY: boot_jtag
+
+boot_jtag_psonly: \
+		$(O)/$(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf \
+		$(O)/$(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf
+ifeq ($(findstring zynqmp,$(2)),zynqmp)
+	cd $(O) && \
+	$(XSCT) -eval 'connect -url $(HW_SERVER_URL); \
+		puts stderr "INFO: Disabling JTAG security gates for DAP, PLTAP and PMU..."; \
+		targets -set -filter {name =~ "PSU"}; \
+		mwr 0xffca0038 0x1ff; \
+		after 500; \
+		if {[string trim "$(JTAG_PMU_PRJ)"] != ""} { \
+			puts stderr "INFO: Downloading the PMU firmware..."; \
+			targets -set -filter {name =~ "MicroBlaze PMU"}; \
+			dow $(JTAG_PMU_PRJ)/$($(JTAG_PMU_PRJ)_BCFG)/$(JTAG_PMU_PRJ).elf; \
+			con; \
+			after 500; \
+		}; \
+		targets -set -nocase -filter {name =~ "*A53*#0"}; \
+		rst -processor -clear-registers; \
+		after 1000; \
+		source ./$(PLAT_PRJ)/hw/psu_init.tcl; psu_post_config; \
+		if { [string first "Stopped" [state]] != 0 } { \
+			stop; \
+		}; \
+		puts stderr "INFO: Downloading FSBL to the target."; \
+		dow $(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf; \
+		con; \
+		after 3000; stop; \
+		puts stderr "INFO: Downloading app to the target."; \
+		dow $(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf; \
+		puts stderr "INFO: Executing app."; \
+		con; \
+		exit;'
+else ifeq ($(findstring zynq,$(2)),zynq)
+	cd $(O) && \
+	$(XSCT) -eval 'connect -url $(HW_SERVER_URL); \
+		targets -set -nocase -filter {name =~ "arm*#0"}; \
+		rst -processor -clear-registers; \
+		after 1000; \
+		source ./$(PLAT_PRJ)/hw/ps7_init.tcl; ps7_post_config; \
+		if { [string first "Stopped" [state]] != 0 } { \
+			stop; \
+		}; \
+		puts stderr "INFO: Downloading FSBL to the target."; \
+		dow $(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf; \
+		con; \
+		after 3000; stop; \
+		puts stderr "INFO: Downloading app to the target."; \
+		dow $(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf; \
+		puts stderr "INFO: Executing app."; \
+		con; \
+		exit;'
+endif
+.PHONY: boot_jtag_psonly
+
+endef
+
+###############################################################################
 # Targets
 
 # generate make rules for platform project, single
@@ -362,6 +492,9 @@ $(foreach APP_PRJ,$(APP_PRJS),\
 # generate make rules for bootgen projects, multiple
 $(foreach BOOTGEN_PRJ,$(BOOTGEN_PRJS),\
 	$(eval $(call gen-bif-rule,$(BOOTGEN_PRJ))))
+
+# generate make rules for boot jtag project, single
+$(eval $(call gen-boot-jtag-rule,$(HDF),$(JTAG_ARCH)))
 
 # generate all projects
 generate: $(GEN_APPS_DEP) $(GEN_BOOTGEN_DEP)

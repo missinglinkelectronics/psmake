@@ -1027,6 +1027,57 @@ On other architectures (e.g. zynq or versal), `destination_device` is not
 supported, and thus, `_BIF_ATTR` has to be left empty and `_BIF_FILE` set to
 `$(BIT)`.
 
+#### JTAG boot
+
+The Vitis Makefile can boot hardware directly over JTAG, including transferring
+a bitstream, the FSBL, the PMU firmware for ZynqMP, and an application.
+Currently supported are the architectures Zynq and ZynqMP. Loading applications
+to be run at a certain exception level is not supported. This includes the ARM
+Trusted Firmware (`bl31.elf`), required for e.g. Linux, on ZynqMP. Furthermore,
+device trees on Zynq and ZynqMP are not supported.
+
+The following JTAG boot options are available:
+
+`JTAG_ARCH`
+: Device architecture. Can either be "zynq" or "zynqmp".
+
+`JTAG_FSBL_PRJ`
+: FSBL used for booting. Should be contain the name of the FSBL application
+project (e.g. "fsbl" as shown in these examples)
+
+`JTAG_PMU_PRJ`
+: PMU firmware used for booting. Should be contain the name of the PMU firmware
+application project (template "ZynqMP PMU Firmware" on processor "psu_pmu_0").
+Optional, ignored on Zynq
+
+`JTAG_APP_PRJ`
+: Appplication project. Should be contain the name of the application
+project (e.g. "helloworld" as shown in these examples)
+
+`JTAG_PL_FILE`
+: Path to bitstream.
+
+The file name of a bitstream depends on the Vivado design and is often not
+known before the HDF has been extracted. In these cases, by convention, one
+should point the corresponding `JTAG_PL_FILE` option to a variable named like
+`BIT` (`BIT` will be initialized to the name of the `.xsa` file and can
+be automatically extracted from it. If the name does not match, extraction will
+fail and thus require the user to manually specify the bit-file.):
+
+    JTAG_PL_FILE = $(BIT)
+
+The `BIT` variable must then be provided on invocation:
+
+    $ make HDF=<path-to-your-hdf> BIT=hw/<bitstream>.bit
+
+Optionally, one can provide a default as well:
+
+    BIT ?= hw/design_1_wrapper.bit
+
+`JTAG_PL_ARG`
+: Further arguments for downloading the bitstream to the FPGA. For example,
+"early silicon" might require a parameter such as `-no-revision-check`.
+
 ### Setup
 
 Create a symlink named `Makefile` to the `vitis.mk` file:
@@ -1077,6 +1128,12 @@ board via JTAG. In order to e.g. flash the Bootgen project `bootbin`, one would
 execute:
 
     $ make bootbin_flash HW_SERVER_URL=<hw-server-url>
+    
+JTAG boot projects come with a `boot_jtag` target boot applications on the
+board via JTAG with a bitstream. `boot_jtag_psonly` does not re-program the FPGA
+and only resets the processors.
+
+    $ make boot_jtag HDF=<path-to-.xsa-file> HW_SERVER_URL=<hw-server-url>
 
 In addition, the following generic Makefile targets are available:
 
