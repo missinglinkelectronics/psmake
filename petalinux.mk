@@ -146,7 +146,13 @@ endif
 ifneq ($(BOOT),)
 BOOT_ARG_OUT = -o $(BOOT)
 endif
-
+JTAG_ARG ?=
+ifneq ($(HW_SERVER_BEFORE_CONNECT),)
+JTAG_ARG += --before-connect '$(HW_SERVER_BEFORE_CONNECT)'
+endif
+ifneq ($(HW_SERVER_AFTER_CONNECT),)
+JTAG_ARG += --after-connect '$(HW_SERVER_AFTER_CONNECT)'
+endif
 
 ###############################################################################
 
@@ -293,10 +299,10 @@ reset-jtag: $(PRF_HDF)
 	$(XSDB) $(MAKEFILE_PATH)xsdb/$(PLATFORM)-reset.tcl
 
 boot-jtag-u-boot: reset-jtag
-	petalinux-boot --jtag --u-boot -v --fpga --hw_server-url $(HW_SERVER_URL)
+	petalinux-boot --jtag --u-boot -v --fpga --hw_server-url $(HW_SERVER_URL) $(JTAG_ARG)
 
 boot-jtag-kernel: reset-jtag
-	petalinux-boot --jtag --kernel -v --fpga --hw_server-url $(HW_SERVER_URL)
+	petalinux-boot --jtag --kernel -v --fpga --hw_server-url $(HW_SERVER_URL) $(JTAG_ARG)
 
 boot-jtag-psinit-uboot: reset-jtag
 	$(XSDB) $(MAKEFILE_PATH)xsdb/$(PLATFORM)-boot-psinit-uboot.tcl
