@@ -301,11 +301,13 @@ ifneq ($$(strip $$($(1)_SED)),)
 	$$(foreach SED,$$($(1)_SED),$(call sed-src,$(1)/src,$$(SED))) :
 endif
 
-$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a \
-		$(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp $(O)/$(1)/src/lscript.ld \
-		$$($(1)_SRC)
+$(O)/$(1)/$$($(1)_BCFG)/makefile: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp $(O)/$(1)/src/lscript.ld
 	$(XSCT) -eval 'setws {$(O)}; \
 		app build -name {$(1)}'
+
+$(O)/$(1)/$$($(1)_BCFG)/$(1).elf: $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a \
+		$(O)/$(1)/$$($(1)_BCFG)/makefile $$($(1)_SRC)
+	$(MAKE) -C $(O)/$(1)/$$($(1)_BCFG) all
 
 GEN_APPS_DEP += $(O)/$(2)/export/$(2)/sw/$(2)/$$($(1)_DOMAIN)/bsplib/lib/libxil.a
 BLD_APPS_DEP += $(O)/$(1)/$$($(1)_BCFG)/$(1).elf
