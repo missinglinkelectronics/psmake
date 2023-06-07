@@ -93,7 +93,7 @@ endif
 # arg1: platform name
 # arg2: path to platform file
 define gen-plat-rule
-$(O)/$(1)/hw/$(1).stamp: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
+$(O)/$(1)/hw/$(1)_init.stamp: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
 ifneq ($(HDF),)
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform create -name {$(1)} -hw {$(2)}'
@@ -108,10 +108,29 @@ else
 endif
 endif
 	touch $$@
+	# Also create / touch updatehw stamp file
+	touch $(O)/$(1)/hw/$(1).stamp
+
+$(O)/$(1)/hw/$(1).stamp: $(2) $(O)/$(1)/hw/$(1)_init.stamp
+ifneq ($(HDF),)
+	$(XSCT) -eval 'setws {$(O)}; \
+		platform active {$(1)}; \
+		platform config -updatehw {$(2)}'
+	# Also create / touch initial stamp file
+	touch $(O)/$(1)/hw/$(1)_init.stamp
+	touch $$@
+else
+	@echo "error: missing HDF, run with HDF=<path-to-.xsa-file>" >&2
+	@false
+endif
 
 # shortcut to create platform, "make <plat>"
-$(1): $(O)/$(1)/hw/$(1).stamp
+$(1): $(O)/$(1)/hw/$(1)_init.stamp
 .PHONY: $(1)
+
+# shortcut to update platform "make <plat>_updatehw"
+$(1)_updatehw: $(O)/$(1)/hw/$(1).stamp
+.PHONY: $(1)_updatehw
 
 $(1)_distclean:
 	-$(XSCT) -eval 'setws {$(O)}; \
@@ -192,7 +211,7 @@ __$(1)_EXTRA_CCMD += \
 endif
 endif
 
-$(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile: $(O)/$(2)/hw/$(2).stamp
+$(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile: $(O)/$(2)/hw/$(2)_init.stamp
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(2)}; \
 		domain create -name {$(1)} -proc {$$($(1)_PROC)} \
@@ -209,7 +228,8 @@ ifneq ($$(strip $$($(1)_SED)),)
 endif
 
 
-$(O)/$(2)/export/$(2)/sw/$(2)/$(1)/bsplib/lib/libxil.a: $(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile
+$(O)/$(2)/export/$(2)/sw/$(2)/$(1)/bsplib/lib/libxil.a: $(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile \
+		$(O)/$(2)/hw/$(2).stamp
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(2)}; \
 		platform generate -domains {$(1)}'
@@ -301,7 +321,7 @@ ifneq ($$(strip $$($(1)_SED)),)
 	$$(foreach SED,$$($(1)_SED),$(call sed-src,$(1)/src,$$(SED))) :
 endif
 
-$(O)/$(1)/$$($(1)_BCFG)/makefile: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp $(O)/$(1)/src/lscript.ld
+$(O)/$(1)/$$($(1)_BCFG)/makefile: $(O)/$(1)/src/lscript.ld
 	$(XSCT) -eval 'setws {$(O)}; \
 		app build -name {$(1)}'
 

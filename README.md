@@ -1070,6 +1070,10 @@ the `XPFM` variable.
 `plat_distclean`
 : Clean the platform project.
 
+`plat_updatehw`
+: Re-import an updated hardware description file (XSA) when a platform project
+already exists in the workspace.
+
 `generate`
 : Generate all projects.
 
