@@ -348,7 +348,7 @@ endef
 
 # generate make rules for platform project, single
 $(eval $(call gen-plat-rule,$(PLAT_PRJ),$(HDF)))
-getdsa: $(PLAT_PRJ)
+gethwplat: $(PLAT_PRJ)
 .PHONY: gethwplat
 
 # generate make rules for domains, multiple
