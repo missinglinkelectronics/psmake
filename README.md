@@ -596,7 +596,9 @@ Bootgen (e.g. key generation) or is not a file at all, one must set the
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one
 should point the corresponding `BIF_FILE` option to a variable named like
-`BIT`:
+`BIT` (`BIT` will be initialized to the name of the `.xsa` file and can
+be automatically extracted from it. If the name does not match, extraction will
+fail and thus require the user to manually specify the bit-file.):
 
     bootbin_bit_BIF_ATTR = destination_device=pl
     bootbin_bit_BIF_FILE = $(BIT)
@@ -608,6 +610,12 @@ The `BIT` variable must then be provided on invocation:
 Optionally, one can provide a default as well:
 
     BIT ?= hw/design_1_wrapper.bit
+
+Alternatively, `_BIF_FILE` can be omitted or left empty for bitstreams iff
+`BIF_ARCH` is equal to zynqmp and `destination_device=pl` has been specified.
+On other architectures (e.g. zynq or versal), `destination_device` is not
+supported, and thus, `_BIF_ATTR` has to be left empty and `_BIF_FILE` set to
+`$(BIT)`.
 
 
 ### Setup
@@ -971,7 +979,9 @@ Bootgen (e.g. key generation) or is not a file at all, one must set the
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one
 should point the corresponding `BIF_FILE` option to a variable named like
-`BIT`:
+`BIT` (`BIT` will be initialized to the name of the `.xsa` file and can
+be automatically extracted from it. If the name does not match, extraction will
+fail and thus require the user to manually specify the bit-file.):
 
     bootbin_bit_BIF_ATTR = destination_device=pl
     bootbin_bit_BIF_FILE = $(BIT)
@@ -984,11 +994,11 @@ Optionally, one can provide a default as well:
 
     BIT ?= hw/design_1_wrapper.bit
 
-Alternatively, _BIF_FILE can be omitted or left empty for bitstreams. The
-bitstream will be extracted from the .xsa specified by the `HDF` variable
-instead. This will only work, if the bit-file within the xsa-file has the
-same name (apart from its extension). Otherwise extraction will fail and thus
-require the user to manually specify the bit-file.
+Alternatively, `_BIF_FILE` can be omitted or left empty for bitstreams iff
+`BIF_ARCH` is equal to zynqmp and `destination_device=pl` has been specified.
+On other architectures (e.g. zynq or versal), `destination_device` is not
+supported, and thus, `_BIF_ATTR` has to be left empty and `_BIF_FILE` set to
+`$(BIT)`.
 
 ### Setup
 

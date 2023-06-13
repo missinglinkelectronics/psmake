@@ -112,15 +112,18 @@ define sanitize-rel-abs-path
 $$(if $$(findstring yes,$$(if $$(patsubst /%,,$(1)),,yes)),$(1),$(O)/$(1))
 endef
 
+BIT ?= $(notdir $(HDF:.xsa=.bit))
+
+$(O)/$(notdir $(HDF:.xsa=.bit)): $(HDF)
+	unzip -u -DD -o -j $^ $(notdir $@) -d $(dir $@)
+
 # arg1: Bootgen project
 # arg2: BIF attribute
-define gen-extract-bitfile
+define gen-init-bitfile-deprecated
 ifneq (,$$(findstring destination_device=pl,$$($(1)_$(2)_BIF_ATTR)))
 $(1)_$(2)_BIF_FILE ?=
 ifeq ($$($(1)_$(2)_BIF_FILE),)
-$(1)_$(2)_BIF_FILE = $$(notdir $$(HDF:.xsa=.bit))
-$(O)/$(notdir $(HDF:.xsa=.bit)):
-	unzip -j $$(HDF) $$(notdir $$@) -d $$(dir $$@)
+$(1)_$(2)_BIF_FILE = $(BIT)
 endif
 endif
 endef
@@ -148,8 +151,10 @@ $(1)_BOOTGEN_DEP = $$(foreach BIF_ATTR,$$($(1)_BIF_ATTRS),\
 	$(call gen-bootgen-dep,$(1),$$(BIF_ATTR)))
 
 # generate make rules for bitstream extractions, multiple
+# Deprecated: Ensure old behavior for A53-based setups. However, using $(BIT)
+# instead is highly recommended!
 $(foreach BIF_ATTR,$($(1)_BIF_ATTRS),\
-	$(eval $(call gen-extract-bitfile,$(1),$(BIF_ATTR))))
+	$(eval $(call gen-init-bitfile-deprecated,$(1),$(BIF_ATTR))))
 
 $(O)/$(1)/$(1).bif: $(O)/.metadata/repos.stamp $$($(1)_BOOTGEN_DEP)
 	mkdir -p $$(dir $$@)
