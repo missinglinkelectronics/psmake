@@ -729,9 +729,16 @@ Vitis, but not Windows. However, testing is only conducted on Ubuntu 18.04 LTS
 
 ### Known Issues
 
-- Due to a bug in the Vitis Tcl API, when building an application the
-  corresponding domain is always rebuild as well. It is therefore recommended
-  to build applications in the Vitis GUI once the workspace has been created.
+- Due to a bug in the Vitis Tcl API, when building an application using 
+  `app build` the corresponding domain is always rebuilt as well. This Vitis
+  Makefile tries to utilize the generated individual application Makefiles as
+  much as possible without executing `app build`. However, `app build` has to
+  be executed at least once during the first build. During the build process,
+  Vitis also refreshes all other domains (e.g. FSBL). For the second build, this
+  Makefile detects the changes in the just refreshed domains and subsequently
+  rebuilds all applications which belong to the refreshed domains (e.g. FSBL).
+  The third and all subsequent builds will find all dependencies correctly up
+  to date.
 
 
 ### Build Configuration Syntax
@@ -1080,6 +1087,10 @@ the `XPFM` variable.
 
 `plat_distclean`
 : Clean the platform project.
+
+`plat_updatehw`
+: Re-import an updated hardware description file (XSA) when a platform project
+already exists in the workspace.
 
 `generate`
 : Generate all projects.
