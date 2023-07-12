@@ -336,6 +336,10 @@ BLD_APPS_DEP += $(O)/$(1)/$$($(1)_BCFG)/$(1).elf
 $(1): $(O)/$(1)/$$($(1)_BCFG)/$(1).elf
 .PHONY: $(1)
 
+$(1)_clean:
+	$(MAKE) -C $(O)/$(1)/$$($(1)_BCFG) clean
+.PHONY: $(1)_clean
+
 $(1)_distclean:
 	-$(XSCT) -eval 'setws {$(O)}; \
 		app remove {$(1)}'
