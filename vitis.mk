@@ -93,7 +93,7 @@ endif
 # arg1: platform name
 # arg2: path to platform file
 define gen-plat-rule
-$(O)/$(1)/hw/$(1)_init.stamp: $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
+$(O)/$(1)/hw/$(1)_init.stamp: | $(O)/.metadata/repos.stamp $(O)/.metadata/plats.stamp
 ifneq ($(HDF),)
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform create -name {$(1)} -hw {$(2)}'
@@ -111,7 +111,7 @@ endif
 	# Also create / touch updatehw stamp file
 	touch $(O)/$(1)/hw/$(1).stamp
 
-$(O)/$(1)/hw/$(1).stamp: $(2) $(O)/$(1)/hw/$(1)_init.stamp
+$(O)/$(1)/hw/$(1).stamp: $(2) | $(O)/$(1)/hw/$(1)_init.stamp
 ifneq ($(HDF),)
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(1)}; \
@@ -125,7 +125,7 @@ else
 endif
 
 # shortcut to create platform, "make <plat>"
-$(1): $(O)/$(1)/hw/$(1)_init.stamp
+$(1): | $(O)/$(1)/hw/$(1)_init.stamp
 .PHONY: $(1)
 
 # shortcut to update platform "make <plat>_updatehw"
@@ -211,7 +211,7 @@ __$(1)_EXTRA_CCMD += \
 endif
 endif
 
-$(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile: $(O)/$(2)/hw/$(2)_init.stamp
+$(O)/$(2)/$$($(1)_PROC)/$(1)/bsp/Makefile: | $(O)/$(2)/hw/$(2)_init.stamp
 	$(XSCT) -eval 'setws {$(O)}; \
 		platform active {$(2)}; \
 		domain create -name {$(1)} -proc {$$($(1)_PROC)} \
