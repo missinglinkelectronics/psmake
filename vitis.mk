@@ -374,8 +374,6 @@ ifeq ($(findstring zynqmp,$(2)),zynqmp)
 			con; \
 			after 500; \
 		}; \
-		puts stderr "INFO: Configuring the FPGA..."; \
-		fpga $(JTAG_PL_ARG) $(JTAG_PL_FILE); \
 		targets -set -nocase -filter {name =~ "*A53*#0"}; \
 		rst -processor -clear-registers; \
 		after 1000; \
@@ -387,6 +385,8 @@ ifeq ($(findstring zynqmp,$(2)),zynqmp)
 		dow $(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf; \
 		con; \
 		after 3000; stop; \
+		puts stderr "INFO: Configuring the FPGA..."; \
+		fpga $(JTAG_PL_ARG) $(JTAG_PL_FILE); \
 		puts stderr "INFO: Downloading app to the target."; \
 		dow $(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf; \
 		puts stderr "INFO: Executing app."; \
@@ -399,8 +399,6 @@ else ifeq ($(findstring zynq,$(2)),zynq)
 		targets -set -nocase -filter {name =~ "*APU*"}; \
 		rst -srst; \
 		after 1000; \
-		puts stderr "INFO: Configuring the FPGA..."; \
-		fpga $(JTAG_PL_ARG) $(JTAG_PL_FILE); \
 		targets -set -nocase -filter {name =~ "arm*#0"}; \
 		rst -processor -clear-registers; \
 		after 1000; \
@@ -412,6 +410,8 @@ else ifeq ($(findstring zynq,$(2)),zynq)
 		dow $(JTAG_FSBL_PRJ)/$($(JTAG_FSBL_PRJ)_BCFG)/$(JTAG_FSBL_PRJ).elf; \
 		con; \
 		after 3000; stop; \
+		puts stderr "INFO: Configuring the FPGA..."; \
+		fpga $(JTAG_PL_ARG) $(JTAG_PL_FILE); \
 		puts stderr "INFO: Downloading app to the target."; \
 		dow $(JTAG_APP_PRJ)/$($(JTAG_APP_PRJ)_BCFG)/$(JTAG_APP_PRJ).elf; \
 		puts stderr "INFO: Executing app."; \
