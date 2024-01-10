@@ -302,6 +302,9 @@ package-boot: $(PRJ_HDF)
 		$(BOOT_ARG_OUT)
 package-boot: $(BOOT)
 
+# package-secure-boot
+include $(PSMAKE_DIR)/secure-boot.mk
+
 package-prebuilt: $(PRJ_HDF)
 	petalinux-package --prebuilt --force -a $(IMAGE):images
 

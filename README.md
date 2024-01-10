@@ -101,6 +101,41 @@ variable.
 `package-prebuilt`
 : Copy built artifacts to pre-built directory.
 
+`package-secure-boot`
+: Package boot image with authentication and encryption for FSBL, PMU firmware,
+ATF and bitstream. Device tree, U-Boot and optionally `image.ub` (Linux kernel,
+etc.) are only authenticated but not encrypted. This applies to ZynqMP devices
+only. The resulting boot image resides in `images/linux/secure-boot/BOOT.BIN`.
+
+The variable `KEYS` must be set and contain a path to a directory with the
+following key files: `red_key.txt`, `black_iv.txt` (for encryption), `psk0.pem`,
+`ssk0.pem` (for authentication).
+
+The variable `PART_NAME` must be set to the ZynqMP device part name
+(e.g. `xczu9eg-ffvb1156-2-e`).
+
+For encryption the packaged boot image is configured to use the Black Key
+method, with the Black Key being stored in eFUSE. The Black Key method is used
+to have the actual device key (Red Key) stored in encrypted form using the PUF
+KEK (physical unclonable function, key encryption key).
+
+Furthermore for encryption the packaged boot image is configured to use the
+Operational Key (OP Key) method, which is used to minimize the use of the actual
+device key (Red Key). Only the FSBL is encrypted with the Red Key. The other
+parts of the boot image are encrypted with the OP Key.
+
+IMPORTANT: A new, different OP Key is generated and used each time target
+`package-secure-boot` is invoked!
+
+If the variable `AUTH_ONLY` is set to `yes`, encryption will be omitted for all
+parts of the boot image.
+
+If the variable `INCLUDE_IMAGE` is set to `yes`, the `image.ub` and a specially
+generated U-Boot boot script are included in the `BOOT.BIN`, so that the system
+can be booted with the just the `BOOT.BIN` file. Note that a `boot.scr` file
+must not exist next to such a `BOOT.BIN` file on an SDCard, otherwise U-Boot
+picks it up and does not use the files included in the `BOOT.BIN`.
+
 `package-bsp`
 : Package Board Support Package (BSP). The BSP file name must be given with the
 `BSP` variable.
@@ -993,6 +1028,26 @@ Bootgen (e.g. key generation) or is not a file at all, one must set the
     generate_pem_pskfile_BIF_FILE = generate_pem/psk0.pem
     generate_pem_pskfile_BIF_FILE_NO_DEP = yes
     ...
+
+Additionally if a `BIF_FILE` value is not a file, but shall be written into the
+`.bif` file as en entry's value, an extra parameter `BIF_FILE_NOTFILE` shall be
+set to `yes`. For example:
+
+    ...
+    secure_boot_keysrc_encryption_BIF_ATTR = keysrc_encryption
+    secure_boot_keysrc_encryption_BIF_FILE = efuse_blk_key
+    secure_boot_keysrc_encryption_BIF_FILE_NO_DEP = yes
+    secure_boot_keysrc_encryption_BIF_FILE_NOTFILE = yes
+    ...
+
+results in the following lines in the generated `.bif` file:
+
+    bootbin:
+    {
+    ...
+        [keysrc_encryption] efuse_blk_key
+    ...
+    }
 
 The file name of a bitstream depends on the Vivado design and is often not
 known before the HDF has been extracted. In these cases, by convention, one

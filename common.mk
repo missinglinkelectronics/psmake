@@ -128,12 +128,21 @@ endif
 endif
 endef
 
+
+# arg1: BIF file name
+# arg2: BIF attribute
+define gen-bif-value
+$$(if $$(findstring yes,$$($(1)_$(2)_BIF_FILE_NOTFILE)),\
+	$$($(1)_$(2)_BIF_FILE),\
+	$(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE)))
+endef
+
 # arg1: BIF file name
 # arg2: BIF attribute
 define gen-bif-attr
 $$(if $$($(1)_$(2)_BIF_ATTR),\
-	\t[$$($(1)_$(2)_BIF_ATTR)] $(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE))\n,\
-	\t$(call sanitize-rel-abs-path,$$($(1)_$(2)_BIF_FILE))\n)
+	\t[$$($(1)_$(2)_BIF_ATTR)] $(call gen-bif-value,$(1),$(2))\n,\
+	\t$(call gen-bif-value,$(1),$(2))\n)
 endef
 
 # arg1: Bootgen project
