@@ -34,7 +34,7 @@ ifeq ($(PETALINUX_VER),)
 $(error PETALINUX_VER is unset. This Makefile must be invoked from within a PetaLinux environment)
 endif
 
-MAKEFILE_PATH = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+PSMAKE_DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # default target
 all: build
@@ -66,14 +66,59 @@ PLATFORM = $(shell cat project-spec/configs/config | \
 		tr [:upper:] [:lower:])
 
 # defaults
-DEF_IMAGEUB = images/linux/image.ub
-SYSTEM_DTB ?= images/linux/system.dtb
-SYSTEM_DTS ?= images/linux/system.dts
 PETALINUX_CONFIG = project-spec/configs/config
 LOCAL_CONF = build/conf/local.conf
 SOURCE_DOWNLOADS = build/downloads
 SOURCE_MIRROR = $(shell awk 'BEGIN { FS = "file://" } /PREMIRRORS =/ { gsub(/ \\n \\/, "", $$2); print $$2 }' build/conf/plnxtool.conf)
 MANIFEST_PATH = $(lastword $(wildcard build/tmp/deploy/licenses/petalinux-image-minimal-*))
+
+# backwards compatibility of renamed parameters
+MAKEFILE_PATH = $(PSMAKE_DIR)
+ifneq ($(FSBL_ELF),)
+FSBL ?= $(FSBL_ELF)
+endif
+ifneq ($(KERNEL_IMG),)
+IMAGE ?= $(KERNEL_IMG)
+endif
+ifneq ($(KERNEL_IMG_OFF),)
+IMAGE_OFF ?= $(KERNEL_IMG_OFF)
+endif
+
+# default values for user arguments
+IMAGE_DIR = images/linux/
+DEF_BIT ?= $(IMAGE_DIR)/system.bit
+DEF_FSBL ?= $(IMAGE_DIR)/zynqmp_fsbl.elf
+DEF_ATF ?= $(IMAGE_DIR)/bl31.elf
+DEF_PMUFW ?= $(IMAGE_DIR)/pmufw.elf
+DEF_UBOOT ?= $(IMAGE_DIR)/u-boot.elf
+DEF_IMAGE ?= $(IMAGE_DIR)/image.ub
+SYSTEM_DTB ?= $(IMAGE_DIR)/system.dtb
+SYSTEM_DTS ?= $(IMAGE_DIR)/system.dts
+
+# defaults for flash-* targets
+FLASH_TYPE ?= qspi_single
+DEF_BOOT_BIN ?= $(IMAGE_DIR)/BOOT.BIN
+BOOT_BIN ?= $(DEF_BOOT_BIN)
+BOOT_BIN_OFF ?= 0
+IMAGE_OFF ?= $(shell echo $$((16 * 1024 * 1024)))
+
+
+# user arguments
+HDF ?= 
+BIT ?= $(DEF_BIT) 
+FSBL ?= $(DEF_FSBL)
+ATF ?= $(DEF_ATF) 
+PMUFW ?= $(DEF_PMUFW)
+UBOOT ?= $(DEF_UBOOT)
+IMAGE ?= $(DEF_IMAGE)
+BOOT ?=
+BSP ?=
+BOOT_ARG_EXTRA ?=
+UPDATE_MIRROR ?= 0
+SOURCE_RELEASE ?= source-release
+MANIFESTS ?= manifests
+V ?=
+
 
 # location of imported .hdf/.xsa file
 ifeq ($(HDF),)
@@ -87,28 +132,6 @@ ifeq ($(PRJ_HDF),)
 $(error missing HDF, run with argument HDF=<path-to-.hdf-or-.xsa-file>)
 endif
 
-# defaults for flash-* targets
-FLASH_TYPE ?= qspi_single
-FSBL_ELF ?= images/linux/zynqmp_fsbl.elf
-BOOT_BIN ?= images/linux/BOOT.BIN
-BOOT_BIN_OFF ?= 0
-KERNEL_IMG ?= $(DEF_IMAGEUB)
-KERNEL_IMG_OFF ?= $(shell echo $$((16 * 1024 * 1024)))
-
-# user arguments
-HDF ?=
-BIT ?=
-FSBL ?=
-ATF ?=
-PMUFW ?=
-UBOOT ?=
-BOOT ?=
-BSP ?=
-BOOT_ARG_EXTRA ?=
-UPDATE_MIRROR ?= 0
-SOURCE_RELEASE ?= source-release
-MANIFESTS ?= manifests
-
 ifneq ($(HDF),)
 TMPHDF ?= build/psmake/tmphdf/$(notdir $(HDF))/$(notdir $(HDF))
 endif
@@ -120,27 +143,27 @@ endif
 # petalinux-package --boot arguments
 ifneq ($(BIT),no)
 BOOT_ARG_FPGA = --fpga
-ifneq ($(BIT),)
+ifneq ($(BIT),$(DEF_BIT))
 BOOT_ARG_FPGA += $(BIT)
 endif
 endif
 #  no need to specify --fsbl if default is to be used
 BOOT_ARG_FSBL =
-ifneq ($(FSBL),)
+ifneq ($(FSBL),$(DEF_FSBL))
 BOOT_ARG_FSBL += --fsbl $(FSBL)
 endif
 #  no need to specify --atf if default is to be used
 BOOT_ARG_ATF =
-ifneq ($(ATF),)
+ifneq ($(ATF),$(DEF_ATF))
 BOOT_ARG_ATF += --atf $(ATF)
 endif
 #  no need to specify --pmufw if default is to be used
 BOOT_ARG_PMUFW =
-ifneq ($(PMUFW),)
+ifneq ($(PMUFW),$(DEF_PMUFW))
 BOOT_ARG_PMUFW += --pmufw $(PMUFW)
 endif
 BOOT_ARG_UBOOT = --u-boot
-ifneq ($(UBOOT),)
+ifneq ($(UBOOT),$(DEF_UBOOT))
 BOOT_ARG_UBOOT += $(UBOOT)
 endif
 ifneq ($(BOOT),)
@@ -263,7 +286,7 @@ endif
 __source-release:
 	$(call set-source-release)
 	__BLD_ARGS="$(GEN_ARGS)" $(MAKE) __build
-	$(MAKEFILE_PATH)/source-release.sh $(SOURCE_RELEASE)
+	$(PSMAKE_DIR)/source-release.sh $(SOURCE_RELEASE)
 	mkdir -p $(MANIFESTS)
 	find $(MANIFEST_PATH) -name '*.manifest' -exec cp {} $(MANIFESTS) \;
 	$(call reset-source-release)
@@ -280,7 +303,7 @@ package-boot: $(PRJ_HDF)
 package-boot: $(BOOT)
 
 package-prebuilt: $(PRJ_HDF)
-	petalinux-package --prebuilt --force -a $(DEF_IMAGEUB):images
+	petalinux-package --prebuilt --force -a $(IMAGE):images
 
 $(BSP): $(PRJ_HDF)
 ifeq ($(BSP),)
@@ -296,7 +319,7 @@ $(SYSTEM_DTS): $(SYSTEM_DTB)
 	dtc -I dtb -O dts -o $@ $<
 
 reset-jtag: $(PRF_HDF)
-	$(XSDB) $(MAKEFILE_PATH)xsdb/$(PLATFORM)-reset.tcl
+	$(XSDB) $(PSMAKE_DIR)xsdb/$(PLATFORM)-reset.tcl
 
 boot-jtag-u-boot: reset-jtag
 	petalinux-boot --jtag --u-boot -v --fpga --hw_server-url $(HW_SERVER_URL) $(JTAG_ARG)
@@ -305,7 +328,7 @@ boot-jtag-kernel: reset-jtag
 	petalinux-boot --jtag --kernel -v --fpga --hw_server-url $(HW_SERVER_URL) $(JTAG_ARG)
 
 boot-jtag-psinit-uboot: reset-jtag
-	$(XSDB) $(MAKEFILE_PATH)xsdb/$(PLATFORM)-boot-psinit-uboot.tcl
+	$(XSDB) $(PSMAKE_DIR)xsdb/$(PLATFORM)-boot-psinit-uboot.tcl
 
 boot-qemu: $(PRJ_HDF)
 	petalinux-boot --qemu --kernel
@@ -315,7 +338,7 @@ boot-qemu: $(PRJ_HDF)
 flash-boot: reset-jtag
 	program_flash \
 		-flash_type $(FLASH_TYPE) \
-		-fsbl $(FSBL_ELF) \
+		-fsbl $(FSBL) \
 		-f $(BOOT_BIN) -offset $(BOOT_BIN_OFF) \
 		-verify \
 		-cable type xilinx_tcf url $(HW_SERVER_URL)
@@ -323,8 +346,8 @@ flash-boot: reset-jtag
 flash-kernel: reset-jtag
 	program_flash \
 		-flash_type $(FLASH_TYPE) \
-		-fsbl $(FSBL_ELF) \
-		-f $(KERNEL_IMG) -offset $(KERNEL_IMG_OFF) \
+		-fsbl $(FSBL) \
+		-f $(IMAGE) -offset $(IMGAGE_OFF) \
 		-verify \
 		-cable type xilinx_tcf url $(HW_SERVER_URL)
 
