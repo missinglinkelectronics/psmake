@@ -46,9 +46,10 @@ functionality.
 
 ### Supported Platforms
 
-PetaLinux is supported from v2018.1 to v2019.1 (i.e. the last four releases).
-The Makefile should run on all underlying OSs supported by PetaLinux; however
-testing is only conducted on Ubuntu 18.04 LTS (Bionic Beaver) as of now.
+PetaLinux is supported from v2018.1 to v2023.2. The Makefile should run on all
+underlying OSs supported by PetaLinux; however, depending in PetaLinux version,
+testing is only conducted on Ubuntu 18.04 LTS (Bionic Beaver) or Ubuntu 22.04
+LTS (Jammy Jellyfish) as of now.
 
 
 ### Setup
