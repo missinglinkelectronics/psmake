@@ -105,9 +105,9 @@ IMAGE_OFF ?= $(shell echo $$((16 * 1024 * 1024)))
 
 # user arguments
 HDF ?= 
-BIT ?= $(DEF_BIT) 
+BIT ?= $(DEF_BIT)
 FSBL ?= $(DEF_FSBL)
-ATF ?= $(DEF_ATF) 
+ATF ?= $(DEF_ATF)
 PMUFW ?= $(DEF_PMUFW)
 UBOOT ?= $(DEF_UBOOT)
 IMAGE ?= $(DEF_IMAGE)
