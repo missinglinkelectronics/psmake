@@ -148,6 +148,14 @@ picks it up and does not use the files included in the `BOOT.BIN`.
 : Reset board via JTAG. The hardware server URL must be provided via the
 `HW_SERVER_URL` variable.
 
+`switch-jtag`
+: Switch to JTAG boot mode and reset board via JTAG. The hardware server URL
+must be provided via the `HW_SERVER_URL` variable.
+
+`switch-sd1_2.0`, `switch-sd1`
+: Switch to SD1 (2.0) boot mode and reset board via JTAG. The hardware server
+URL must be provided via the `HW_SERVER_URL` variable.
+
 `boot-jtag-u-boot`
 : Boot board into U-Boot via JTAG. The hardware server URL must be provided via
 the `HW_SERVER_URL` variable. Optionally the variables `HW_SERVER_BEFORE_CONNECT`

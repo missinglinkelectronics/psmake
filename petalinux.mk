@@ -65,7 +65,7 @@ SILENTCONFIG = --oldconfig
 endif
 
 PLATFORM = $(shell cat project-spec/configs/config | \
-		grep -E '^CONFIG_SYSTEM_(MICROBLAZE|ZYNQ|ZYNQMP)=y$$' | \
+		grep -E '^CONFIG_SYSTEM_(MICROBLAZE|ZYNQ|ZYNQMP|VERSAL)=y$$' | \
 		sed -e 's/^CONFIG_SYSTEM_\(.*\)=y$$/\1/' | \
 		tr [:upper:] [:lower:])
 
@@ -328,6 +328,12 @@ $(SYSTEM_DTS): $(SYSTEM_DTB)
 reset-jtag: $(PRF_HDF)
 	$(XSDB) $(PSMAKE_DIR)xsdb/$(PLATFORM)-reset.tcl
 
+switch-jtag: $(PRF_HDF)
+	$(XSDB) $(PSMAKE_DIR)/xsdb/$(PLATFORM)-switch.tcl -m jtag
+
+switch-sd1_2.0 switch-sd1: $(PRF_HDF)
+	$(XSDB) $(PSMAKE_DIR)/xsdb/$(PLATFORM)-switch.tcl -m sd1_2.0
+
 boot-jtag-u-boot: reset-jtag
 	petalinux-boot --jtag --u-boot -v --fpga --hw_server-url $(HW_SERVER_URL) $(JTAG_ARG)
 
@@ -361,7 +367,8 @@ flash-kernel: reset-jtag
 flash: flash-boot flash-kernel
 
 .PHONY: $(BOOT) $(BSP) package-boot package-prebuilt package-bsp dts \
-	reset-jtag boot-jtag-u-boot boot-jtag-kernel boot-jtag-psinit-uboot \
+	reset-jtag switch-jtag switch-sd1_2.0 switch-sd1 boot-jtag-u-boot \
+	boot-jtag-kernel boot-jtag-psinit-uboot \
 	boot-qemu flash-boot flash-kernel flash
 
 mrproper:
