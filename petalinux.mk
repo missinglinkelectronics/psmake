@@ -43,6 +43,9 @@ all: build
 -include local.mk
 
 # tools
+ifeq ($(shell expr $(subst .,,$(PETALINUX_VER)) ">" 20232),1)
+XSDB ?= $(PETALINUX)/components/xsct/bin/xsdb
+else
 ifeq ($(shell expr $(subst .,,$(PETALINUX_VER)) ">" 20191),1)
 XSDB ?= $(PETALINUX)/tools/xsct/bin/xsdb
 else
@@ -51,6 +54,7 @@ XSDB ?= $(PETALINUX)/tools/hsm/bin/xsdb
 else
 # for v2018.3 and v2019.1, xsdb is automatically found via $PATH
 XSDB ?= xsdb
+endif
 endif
 endif
 
