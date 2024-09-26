@@ -186,7 +186,7 @@ endif
 
 define set-update-mirror
 	sed -i 's/CONFIG_YOCTO_BB_NO_NETWORK=y/# CONFIG_YOCTO_BB_NO_NETWORK is not set/' $(PETALINUX_CONFIG)
-	printf 'BB_GENERATE_MIRROR_TARBALLS = "1"' >> $(LOCAL_CONF)
+	printf 'BB_GENERATE_MIRROR_TARBALLS = "1"\n' >> $(LOCAL_CONF)
 	petalinux-config $(SILENTCONFIG)
 endef
 
