@@ -278,6 +278,8 @@ endif
 ifneq ($$($(1)_HW),)
 $(O)/$(1)/src/lscript.ld:
 	$(XSCT) -eval 'setws {$(O)}; \
+		plat list; \
+		exec sleep 3; \
 		app create -name {$(1)} -hw {$$($(1)_HW)} \
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
 			-os {$$($(1)_OS)} -lang {$$($(1)_LANG)}'
@@ -285,6 +287,8 @@ else
 ifneq ($$($(1)_PLAT),)
 $(O)/$(1)/src/lscript.ld: | $(O)/$$($(1)_PLAT)/hw/$$($(1)_PLAT).stamp $(O)/$$($(1)_PLAT)/$$($(1)_PROC)/$$($(1)_DOMAIN)/bsp/Makefile
 	$(XSCT) -eval 'setws {$(O)}; \
+		plat list; \
+		exec sleep 3; \
 		app create -name {$(1)} -platform {$$($(1)_PLAT)} \
 			-domain {$$($(1)_DOMAIN)} \
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
@@ -298,6 +302,8 @@ $(O)/$(1)/src/lscript.ld: | $(O)/$$($(1)_PLAT)/hw/$$($(1)_PLAT).stamp $(O)/$$($(
 else
 $(O)/$(1)/src/lscript.ld: | $(O)/$(2)/hw/$(2).stamp $(O)/$(2)/$$($(1)_PROC)/$$($(1)_DOMAIN)/bsp/Makefile
 	$(XSCT) -eval 'setws {$(O)}; \
+		plat list; \
+		exec sleep 3; \
 		app create -name {$(1)} -platform {$(2)} \
 			-domain {$$($(1)_DOMAIN)} \
 			-proc {$$($(1)_PROC)} -template {$$($(1)_TMPL)} \
