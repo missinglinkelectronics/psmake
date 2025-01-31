@@ -809,6 +809,8 @@ The platform is either derived from
 
 - a hardware description file (XSA)
 - an existing platform via the corresponding XPFM file.
+- a pre-defined hardware file (HW_PLAT variable), e.g. zc702, zcu102, zc706,
+  zed, zcu106, vck190, vmk190, vck190_es1 or vmk180_es1.
 
 See section "Usage" on how to import one of these artifacts during build.
 

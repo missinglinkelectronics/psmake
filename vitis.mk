@@ -103,8 +103,14 @@ ifneq ($(XPFM),)
 		platform create -name {$(1)} -xpfm {$(XPFM)}'
 	touch $(O)/$(1)/xpfm.stamp
 else
-	@echo "error: missing HDF or XPFM, run either with HDF=<path-to-.xsa-file> or XPFM=<path-to-.xpfm-file>" >&2
+ifneq ($(HW_PLAT),)
+	$(XSCT) -eval 'setws {$(O)}; \
+		platform create -name {$(1)} -hw {$(HW_PLAT)}'
+	touch $(O)/$(1)/xpfm.stamp
+else
+	@echo "error: missing HDF or XPFM, run either with HDF=<path-to-.xsa-file>, XPFM=<path-to-.xpfm-file> or provide HW_PLAT" >&2
 	@false
+endif
 endif
 endif
 	touch $$@
