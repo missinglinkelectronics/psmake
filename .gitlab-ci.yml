@@ -1,0 +1,150 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  # The following wrappers essentially enter the respective
+  # environment supporting these tools. This entails at least
+  # source <path-to-installed-PetaLinux>/settings.sh (UG1144) or
+  # source <Vitis Tool Installation Path>/settings64.sh (XD099)
+  VIVADO_WRAPPER: "vitis-v2023.1.sh"
+  PETALINUX_WRAPPER: "petalinux-v2023.1.sh"
+
+stages:
+  - vitis-project
+  - psmake-build
+
+# Template to derive the only keyword for jobs.
+.only_template: &only_template
+  only:
+    - web
+    - tags
+    - /^mle/master.*$/
+    - merge_requests
+
+vitis_project_zcu102_xilinx: &vitis_project_zcu102_xilinx
+  stage: vitis-project
+  <<: *only_template
+  tags:
+    - jammy
+  script:
+    - mkdir -p vitis_project_zcu102_xilinx && cd vitis_project_zcu102_xilinx
+    - cp -r ../examples/vitis/* .
+    - rm default_7series.mk
+    - ln -sf ../vitis.mk Makefile
+  artifacts:
+    paths:
+      - vitis_project_zcu102_xilinx
+
+vitis_project_zcu106_xilinx: &vitis_project_zcu106_xilinx
+  stage: vitis-project
+  <<: *only_template
+  tags:
+    - jammy
+  script:
+    - mkdir -p vitis_project_zcu106_xilinx && cd vitis_project_zcu106_xilinx
+    - cp -r ../examples/vitis/* .
+    - rm default_7series.mk
+    - ln -sf ../vitis.mk Makefile
+  artifacts:
+    paths:
+      - vitis_project_zcu106_xilinx
+
+vitis_project_zc706_xilinx: &vitis_project_zc706_xilinx
+  stage: vitis-project
+  <<: *only_template
+  tags:
+    - jammy
+  script:
+    - mkdir -p vitis_project_zc706_xilinx && cd vitis_project_zc706_xilinx
+    - cp -r ../examples/vitis/* .
+    - mv default_7series.mk default.mk
+    - ln -sf ../vitis.mk Makefile
+  artifacts:
+    paths:
+      - vitis_project_zc706_xilinx
+
+vitis_project_zc702_xilinx: &vitis_project_zc702_xilinx
+  stage: vitis-project
+  <<: *only_template
+  tags:
+    - jammy
+  script:
+    - mkdir -p vitis_project_zc702_xilinx && cd vitis_project_zc702_xilinx
+    - cp -r ../examples/vitis/* .
+    - mv default_7series.mk default.mk
+    - ln -sf ../vitis.mk Makefile
+  artifacts:
+    paths:
+      - vitis_project_zc702_xilinx
+
+vitis_project_zed_xilinx: &vitis_project_zed_xilinx
+  stage: vitis-project
+  <<: *only_template
+  tags:
+    - jammy
+  script:
+    - mkdir -p vitis_project_zed_xilinx && cd vitis_project_zed_xilinx
+    - cp -r ../examples/vitis/* .
+    - mv default_7series.mk default.mk
+    - ln -sf ../vitis.mk Makefile
+  artifacts:
+    paths:
+      - vitis_project_zed_xilinx
+
+vitis_project_zcu102-build:
+  tags:
+    - jammy
+  stage: psmake-build
+  <<: *only_template
+  timeout: 1h
+  script:
+    - cd vitis_project_zcu102_xilinx
+    - ${VIVADO_WRAPPER} make HW_PLAT=zcu102
+  dependencies:
+    - vitis_project_zcu102_xilinx
+
+vitis_project_zcu106-build:
+  tags:
+    - jammy
+  stage: psmake-build
+  <<: *only_template
+  timeout: 1h
+  script:
+    - cd vitis_project_zcu106_xilinx
+    - ${VIVADO_WRAPPER} make HW_PLAT=zcu106
+  dependencies:
+    - vitis_project_zcu106_xilinx
+
+vitis_project_zc706-build:
+  tags:
+    - jammy
+  stage: psmake-build
+  <<: *only_template
+  timeout: 1h
+  script:
+    - cd vitis_project_zc706_xilinx
+    - ${VIVADO_WRAPPER} make HW_PLAT=zc706
+  dependencies:
+    - vitis_project_zc706_xilinx
+
+vitis_project_zc702-build:
+  tags:
+    - jammy
+  stage: psmake-build
+  <<: *only_template
+  timeout: 1h
+  script:
+    - cd vitis_project_zc702_xilinx
+    - ${VIVADO_WRAPPER} make HW_PLAT=zc702
+  dependencies:
+    - vitis_project_zc702_xilinx
+
+vitis_project_zed-build:
+  tags:
+    - jammy
+  stage: psmake-build
+  <<: *only_template
+  timeout: 1h
+  script:
+    - cd vitis_project_zed_xilinx
+    - ${VIVADO_WRAPPER} make HW_PLAT=zed
+  dependencies:
+    - vitis_project_zed_xilinx
