@@ -11,19 +11,22 @@ stages:
   - vitis-project
   - psmake-build
 
-# Template to derive the only keyword for jobs.
-.only_template: &only_template
-  only:
-    - web
-    - tags
-    - /^mle/master.*$/
-    - merge_requests
-
-vitis_project_zcu102_xilinx: &vitis_project_zcu102_xilinx
-  stage: vitis-project
-  <<: *only_template
+.build_template:
   tags:
     - jammy
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_COMMIT_BRANCH =~ /^master/
+      when: always
+    - if: $CI_COMMIT_TAG
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule"
+
+vitis_project_zcu102_xilinx: &vitis_project_zcu102_xilinx
+  extends:
+    - .build_template
+  stage: vitis-project
   script:
     - mkdir -p vitis_project_zcu102_xilinx && cd vitis_project_zcu102_xilinx
     - cp -r ../examples/vitis/* .
@@ -34,10 +37,9 @@ vitis_project_zcu102_xilinx: &vitis_project_zcu102_xilinx
       - vitis_project_zcu102_xilinx
 
 vitis_project_zcu106_xilinx: &vitis_project_zcu106_xilinx
+  extends:
+    - .build_template
   stage: vitis-project
-  <<: *only_template
-  tags:
-    - jammy
   script:
     - mkdir -p vitis_project_zcu106_xilinx && cd vitis_project_zcu106_xilinx
     - cp -r ../examples/vitis/* .
@@ -48,10 +50,9 @@ vitis_project_zcu106_xilinx: &vitis_project_zcu106_xilinx
       - vitis_project_zcu106_xilinx
 
 vitis_project_zc706_xilinx: &vitis_project_zc706_xilinx
+  extends:
+    - .build_template
   stage: vitis-project
-  <<: *only_template
-  tags:
-    - jammy
   script:
     - mkdir -p vitis_project_zc706_xilinx && cd vitis_project_zc706_xilinx
     - cp -r ../examples/vitis/* .
@@ -62,10 +63,9 @@ vitis_project_zc706_xilinx: &vitis_project_zc706_xilinx
       - vitis_project_zc706_xilinx
 
 vitis_project_zc702_xilinx: &vitis_project_zc702_xilinx
+  extends:
+    - .build_template
   stage: vitis-project
-  <<: *only_template
-  tags:
-    - jammy
   script:
     - mkdir -p vitis_project_zc702_xilinx && cd vitis_project_zc702_xilinx
     - cp -r ../examples/vitis/* .
@@ -76,10 +76,9 @@ vitis_project_zc702_xilinx: &vitis_project_zc702_xilinx
       - vitis_project_zc702_xilinx
 
 vitis_project_zed_xilinx: &vitis_project_zed_xilinx
+  extends:
+    - .build_template
   stage: vitis-project
-  <<: *only_template
-  tags:
-    - jammy
   script:
     - mkdir -p vitis_project_zed_xilinx && cd vitis_project_zed_xilinx
     - cp -r ../examples/vitis/* .
@@ -90,10 +89,9 @@ vitis_project_zed_xilinx: &vitis_project_zed_xilinx
       - vitis_project_zed_xilinx
 
 vitis_project_zcu102-build:
-  tags:
-    - jammy
+  extends:
+    - .build_template
   stage: psmake-build
-  <<: *only_template
   timeout: 1h
   script:
     - cd vitis_project_zcu102_xilinx
@@ -102,10 +100,9 @@ vitis_project_zcu102-build:
     - vitis_project_zcu102_xilinx
 
 vitis_project_zcu106-build:
-  tags:
-    - jammy
+  extends:
+    - .build_template
   stage: psmake-build
-  <<: *only_template
   timeout: 1h
   script:
     - cd vitis_project_zcu106_xilinx
@@ -114,10 +111,9 @@ vitis_project_zcu106-build:
     - vitis_project_zcu106_xilinx
 
 vitis_project_zc706-build:
-  tags:
-    - jammy
+  extends:
+    - .build_template
   stage: psmake-build
-  <<: *only_template
   timeout: 1h
   script:
     - cd vitis_project_zc706_xilinx
@@ -126,10 +122,9 @@ vitis_project_zc706-build:
     - vitis_project_zc706_xilinx
 
 vitis_project_zc702-build:
-  tags:
-    - jammy
+  extends:
+    - .build_template
   stage: psmake-build
-  <<: *only_template
   timeout: 1h
   script:
     - cd vitis_project_zc702_xilinx
@@ -138,10 +133,9 @@ vitis_project_zc702-build:
     - vitis_project_zc702_xilinx
 
 vitis_project_zed-build:
-  tags:
-    - jammy
+  extends:
+    - .build_template
   stage: psmake-build
-  <<: *only_template
   timeout: 1h
   script:
     - cd vitis_project_zed_xilinx
