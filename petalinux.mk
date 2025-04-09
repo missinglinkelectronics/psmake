@@ -270,7 +270,6 @@ endif
 
 source-release: $(PRJ_HDF)
 	$(call trap-source-release,__BLD_ARGS=\"$(GEN_ARGS)\" $(MAKE) __source-release)
-	__BLD_ARGS="$(GEN_ARGS)" $(MAKE) __source-release
 
 __build:
 ifeq ($(UPDATE_MIRROR),1)
